@@ -3,11 +3,11 @@ import Script from "next/script";
 
 export default function Document() {
   return (
-    <Html lang="en">
+    <Html className="dark" lang="en">
       <Head>
         <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
       </Head>
-      <body>
+      <body className="dark:text-white dark:bg-slate-900">
         <Main />
         <NextScript />
       </body>

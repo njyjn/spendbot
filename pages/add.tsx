@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import { Button, Container, Form, InputGroup } from "react-bootstrap";
+import { Button, Container, Form, InputGroup, Modal, ModalHeader } from "react-bootstrap";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
 
@@ -16,6 +16,7 @@ export default withPageAuthRequired(function Expense() {
   const { data, error } = useSWR("/spend/api/definitions", fetcher);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const [date, setDate] = useState(new Date(Date.now()));
   const [item, setItem] = useState("");
@@ -26,6 +27,15 @@ export default withPageAuthRequired(function Expense() {
   return (
     <>
       <Container fluid>
+        <Modal centered show={isSuccess}>
+          <Modal.Body className="text-center rounded bg-dark">
+            <p>✅ Сделанный!</p>
+            <Button onClick={() => {
+              setIsSuccess(false);
+              router.reload();
+            }}variant="success">Закрой</Button>
+          </Modal.Body>
+        </Modal>
         <h1 className="text-center">💸</h1>
         {data ? (
           <Form
@@ -50,7 +60,7 @@ export default withPageAuthRequired(function Expense() {
                 }
               );
               if ((await response.json()).ok) {
-                router.reload();
+                setIsSuccess(true);
               }
               setIsLoading(false);
             }}
@@ -58,6 +68,7 @@ export default withPageAuthRequired(function Expense() {
             <Form.Group className="mb-3">
               <Form.Label for="date">📆 Дату</Form.Label>
               <Form.Control
+                className="bg-black text-white"
                 id="date"
                 name="date"
                 type="date"
@@ -68,6 +79,7 @@ export default withPageAuthRequired(function Expense() {
             <Form.Group className="mb-3">
               <Form.Label for="item">💁 Расход</Form.Label>
               <Form.Control
+                className="bg-black text-white"
                 id="item"
                 name="item"
                 required
@@ -78,6 +90,7 @@ export default withPageAuthRequired(function Expense() {
             <Form.Group className="mb-3">
               <Form.Label for="category">📦 Категория</Form.Label>
               <Form.Select
+                className="bg-black text-white"
                 id="category"
                 name="category"
                 required
@@ -96,8 +109,11 @@ export default withPageAuthRequired(function Expense() {
             <Form.Group className="mb-3">
               <Form.Label for="cost">💰 Сумма</Form.Label>
               <InputGroup className="mb-2">
-                <InputGroup.Text>SGD</InputGroup.Text>
+                <InputGroup.Text
+                  className="bg-black text-white"
+                  >SGD</InputGroup.Text>
                 <Form.Control
+                  className="bg-black text-white"
                   id="cost"
                   name="cost"
                   required
@@ -109,6 +125,7 @@ export default withPageAuthRequired(function Expense() {
             <Form.Group className="mb-3">
               <Form.Label for="card">💳 Карта</Form.Label>
               <Form.Select
+                className="bg-black text-white"
                 id="card"
                 name="card"
                 required

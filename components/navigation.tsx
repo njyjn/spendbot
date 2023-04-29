@@ -5,7 +5,7 @@ export default function Navigation() {
   const { user, error, isLoading } = useUser();
 
   return (
-    <Navbar collapseOnSelect expand="md">
+    <Navbar variant="dark" collapseOnSelect expand="md">
       <Container fluid>
         <Navbar.Brand href="/spend">SpendBot</Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav"></Navbar.Toggle>
