@@ -14,7 +14,7 @@ const fetcher = async (uri: string) => {
 export default withPageAuthRequired(function Summary() {
   const month = moment().format("MMM YY");
   const { data, error } = useSWR(`/spend/api/expense?month=${month}`, fetcher);
-  
+
   return (
     <>
       <Container fluid className="text-center center">
@@ -24,4 +24,4 @@ export default withPageAuthRequired(function Summary() {
       </Container>
     </>
   );
-})
+});

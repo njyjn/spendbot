@@ -92,7 +92,11 @@ export default withPageAuthRequired(function Expense() {
               >
                 <option value={undefined}>Выберите категорию...</option>
                 {data["categories"].map((e: string) => {
-                  return <option value={e}>{e}</option>;
+                  return (
+                    <option key={"Category." + e} value={e}>
+                      {e}
+                    </option>
+                  );
                 })}
               </Form.Select>
             </Form.Group>
@@ -119,7 +123,11 @@ export default withPageAuthRequired(function Expense() {
               >
                 <option value={undefined}>Выберите карту...</option>
                 {data["cards"].map((e: string) => {
-                  return <option value={e}>{e}</option>;
+                  return (
+                    <option key={"Card." + e} value={e}>
+                      {e}
+                    </option>
+                  );
                 })}
               </Form.Select>
             </Form.Group>

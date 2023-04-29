@@ -12,7 +12,9 @@ export default withApiAuthRequired(async function handler(
   const service = google.sheets({
     version: "v4",
     auth: await new google.auth.GoogleAuth({
-      credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || ''),
+      credentials: JSON.parse(
+        process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || ""
+      ),
       scopes: SCOPES,
     }).getClient(),
   });
