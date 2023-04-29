@@ -3,7 +3,7 @@ const nextConfig = {
   basePath: "/spend",
   assetPrefix: "/spend",
   reactStrictMode: true,
-  trailingSlash: true,
+  trailingSlash: false,
 };
 
 module.exports = nextConfig;
