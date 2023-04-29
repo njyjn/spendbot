@@ -12,6 +12,7 @@ export default withApiAuthRequired(async function handler(
   const service = google.sheets({
     version: "v4",
     auth: await new google.auth.GoogleAuth({
+      credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || ''),
       scopes: SCOPES,
     }).getClient(),
   });
@@ -25,6 +26,7 @@ export default withApiAuthRequired(async function handler(
         range: `'Definitions'!A1:B`,
         majorDimension: "COLUMNS",
       });
+
       if (result.data.values) {
         data = {
           cards: result.data.values[0].slice(1).sort(),
@@ -37,6 +39,7 @@ export default withApiAuthRequired(async function handler(
     }
     return res.status(400).json({ error: "Bad request" });
   } catch (e: any) {
+    console.error(e);
     return res.status(500).json({ errors: e.errors });
   }
 });
