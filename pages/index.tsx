@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   return (
-    <Container fluid>
+    <Container fluid className="center text-center">
       <Image className="mx-auto" src={homePic} alt="home"></Image>
     </Container>
   );
