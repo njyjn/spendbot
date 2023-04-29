@@ -34,7 +34,7 @@ export default withApiAuthRequired(async function handler(
         total: result.data.values?.flat()[1],
       };
     } else if (req.method === "POST") {
-      const { date, item, category, cost, card } = req.body;
+      const { date, item, category, cost, card, person } = req.body;
       const result = await service.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
         range: `'${month}'!B2:F`,
@@ -44,7 +44,15 @@ export default withApiAuthRequired(async function handler(
           range: `'${month}'!B2:F`,
           majorDimension: "ROWS",
           values: [
-            [null, moment(date).format("M/D/YY"), item, category, cost, card],
+            [
+              null,
+              moment(date).format("M/D/YY"),
+              item,
+              category,
+              cost,
+              card,
+              person,
+            ],
           ],
         },
       });

@@ -20,12 +20,12 @@ body {
 }
 
 footer {
-  position: fixed;
+  position: relative;
   left: 0;
   bottom: 0;
   width: 100%;
   text-align: center;
-  padding-bottom: 1rem;
+  padding: 1rem;
   color: slategray;
 }
 

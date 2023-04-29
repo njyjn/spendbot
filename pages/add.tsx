@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import { Button, Container, Form, InputGroup, Modal, ModalHeader } from "react-bootstrap";
+import {
+  Button,
+  Container,
+  Form,
+  InputGroup,
+  Modal,
+  ModalHeader,
+} from "react-bootstrap";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
 
@@ -18,6 +25,7 @@ export default withPageAuthRequired(function Expense() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const [person, setPerson] = useState("");
   const [date, setDate] = useState(new Date(Date.now()));
   const [item, setItem] = useState("");
   const [category, setCategory] = useState("");
@@ -30,10 +38,15 @@ export default withPageAuthRequired(function Expense() {
         <Modal centered show={isSuccess}>
           <Modal.Body className="text-center rounded bg-dark">
             <p>✅ Сделанный!</p>
-            <Button onClick={() => {
-              setIsSuccess(false);
-              router.reload();
-            }}variant="success">Закрой</Button>
+            <Button
+              onClick={() => {
+                setIsSuccess(false);
+                router.reload();
+              }}
+              variant="success"
+            >
+              Закрой
+            </Button>
           </Modal.Body>
         </Modal>
         <h1 className="text-center">💸</h1>
@@ -56,6 +69,7 @@ export default withPageAuthRequired(function Expense() {
                     category,
                     cost,
                     card,
+                    person,
                   }),
                 }
               );
@@ -65,6 +79,25 @@ export default withPageAuthRequired(function Expense() {
               setIsLoading(false);
             }}
           >
+            <Form.Group className="mb-3">
+              <Form.Label for="person">🧍 Человек</Form.Label>
+              <Form.Select
+                className="bg-black text-white"
+                id="person"
+                name="person"
+                required
+                onChange={(event) => setPerson(event.target.value)}
+              >
+                <option value={undefined}>Выберите человека...</option>
+                {data["persons"].map((e: string) => {
+                  return (
+                    <option key={"Person." + e} value={e}>
+                      {e}
+                    </option>
+                  );
+                })}
+              </Form.Select>
+            </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label for="date">📆 Дату</Form.Label>
               <Form.Control
@@ -109,15 +142,15 @@ export default withPageAuthRequired(function Expense() {
             <Form.Group className="mb-3">
               <Form.Label for="cost">💰 Сумма</Form.Label>
               <InputGroup className="mb-2">
-                <InputGroup.Text
-                  className="bg-black text-white"
-                  >SGD</InputGroup.Text>
+                <InputGroup.Text className="bg-black text-white">
+                  SGD
+                </InputGroup.Text>
                 <Form.Control
                   className="bg-black text-white"
                   id="cost"
                   name="cost"
                   required
-                  type="text"
+                  type="number"
                   onChange={(event) => setCost(parseFloat(event.target.value))}
                 ></Form.Control>
               </InputGroup>
@@ -141,8 +174,13 @@ export default withPageAuthRequired(function Expense() {
                 })}
               </Form.Select>
             </Form.Group>
-            <Button variant="primary" type="submit">
-              {isLoading ? "Отправка..." : "📤 Представить"}
+            <Button
+              className="mt-3"
+              style={{ width: "100%" }}
+              variant="success"
+              type="submit"
+            >
+              {isLoading ? "Отправка..." : "➕ Представить"}
             </Button>
           </Form>
         ) : (
