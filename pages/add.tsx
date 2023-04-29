@@ -137,6 +137,7 @@ export default withPageAuthRequired(function Expense() {
                   name="cost"
                   required
                   type="number"
+                  step={0.01}
                   onChange={(event) => setCost(parseFloat(event.target.value))}
                 ></Form.Control>
               </InputGroup>
