@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import { useShowPopup } from "@vkruglikov/react-telegram-web-app";
 import { Button, Container, Form, InputGroup } from "react-bootstrap";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
@@ -13,12 +12,6 @@ const fetcher = async (uri: string) => {
 
 export default withPageAuthRequired(function Expense() {
   const router = useRouter();
-
-  const showPopup = useShowPopup();
-  useEffect(() => {
-    const telegram = window.Telegram.WebApp;
-    telegram.ready();
-  });
 
   const { data, error } = useSWR("/spend/api/definitions", fetcher);
 
