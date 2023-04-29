@@ -18,7 +18,7 @@ export default withPageAuthRequired(function Summary() {
   return (
     <>
       <Container fluid className="text-center center">
-        <h1>💰</h1>
+        <h1>📊 Сводка</h1>
         <p>в {month} года вы все потратили</p>
         <h2>{data ? data.total : "Загрузка..."}</h2>
       </Container>

@@ -42,7 +42,7 @@ export default withPageAuthRequired(function Expense() {
             </Button>
           </Modal.Body>
         </Modal>
-        <h1 className="text-center">💸</h1>
+        <h1 className="text-center">💸 Добавить</h1>
         {data ? (
           <Form
             onSubmit={async (event) => {
@@ -108,6 +108,7 @@ export default withPageAuthRequired(function Expense() {
                 required
                 type="text"
                 onChange={(event) => setItem(event.target.value)}
+                placeholder="Введите название расхода..."
               ></Form.Control>
             </Form.Group>
             <Form.Group className="mb-3">
@@ -139,6 +140,7 @@ export default withPageAuthRequired(function Expense() {
                   type="number"
                   step={0.01}
                   onChange={(event) => setCost(parseFloat(event.target.value))}
+                  placeholder="Введите сумму..."
                 ></Form.Control>
               </InputGroup>
             </Form.Group>
@@ -172,6 +174,7 @@ export default withPageAuthRequired(function Expense() {
         ) : (
           <p>Загрузка...</p>
         )}
+        <p className="mt-3 text-center">⚠️ Чтобы внести изменения, посетите Google Таблицу</p>
       </Container>
     </>
   );
