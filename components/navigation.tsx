@@ -13,6 +13,7 @@ export default function Navigation() {
           <Nav className="me-auto">
             <Nav.Link href="/spend/summary">📊 Сводка</Nav.Link>
             <Nav.Link href="/spend/add">💸 Добавить</Nav.Link>
+            <Nav.Link href="/spend/god">🌈 Бог</Nav.Link>
           </Nav>
           <Nav>
             {user ? (

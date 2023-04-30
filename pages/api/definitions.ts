@@ -1,23 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { google } from "googleapis";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
+import { getService } from "@/utils/google";
 
-const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const service = google.sheets({
-    version: "v4",
-    auth: await new google.auth.GoogleAuth({
-      credentials: JSON.parse(
-        process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || ""
-      ),
-      scopes: SCOPES,
-    }).getClient(),
-  });
+  const service = await getService();
 
   let data;
 
