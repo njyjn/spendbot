@@ -43,13 +43,24 @@ export default withPageAuthRequired(function Expense() {
           <Modal.Body className="text-center">
             <p>✅ Сделанный!</p>
             <Button
+              className="mr-1"
               onClick={() => {
                 setIsSuccess(false);
                 router.reload();
               }}
-              variant="success"
+              variant="primary"
             >
-              Закрой
+              🔙 Закрой
+            </Button>
+            <Button
+              className="ml-1"
+              onClick={() => {
+                setIsSuccess(false);
+                router.push("/summary");
+              }}
+              variant="secondary"
+            >
+              📊 Перейти к сводке
             </Button>
           </Modal.Body>
         </Modal>
@@ -122,7 +133,7 @@ export default withPageAuthRequired(function Expense() {
                 <Form.Control
                   id="offsetCost"
                   name="offsetCost"
-                  required={!isOffset}
+                  required={isOffset}
                   type="number"
                   step={0.01}
                   onChange={(event) => {
