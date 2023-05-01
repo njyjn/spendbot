@@ -28,15 +28,14 @@ export default withApiAuthRequired(async function handler(
       const { date, item, category, cost, card, person } = req.body;
       const result = await service.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: `'${month}'!B2:F`,
+        range: `'${month}'!B1:G`,
         valueInputOption: "USER_ENTERED",
         insertDataOption: "INSERT_ROWS",
         requestBody: {
-          range: `'${month}'!B2:F`,
+          range: `'${month}'!B1:G`,
           majorDimension: "ROWS",
           values: [
             [
-              null,
               moment(date).format("M/D/YY"),
               item,
               category,
