@@ -36,6 +36,7 @@ export default withApiAuthRequired(async function handler(
           majorDimension: "ROWS",
           values: [
             [
+              null,
               moment(date).format("M/D/YY"),
               item,
               category,
