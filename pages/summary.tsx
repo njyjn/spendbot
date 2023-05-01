@@ -217,9 +217,9 @@ export default withPageAuthRequired(function Summary() {
                   </thead>
                   <tbody>
                     {data && data.expenses ? (
-                      data.expenses.map((e: Expense) => {
+                      data.expenses.map((e: Expense, index: number) => {
                         return (
-                          <tr>
+                          <tr key={index}>
                             <td>{e.date}</td>
                             <td>{e.item}</td>
                             <td>{e.category}</td>
