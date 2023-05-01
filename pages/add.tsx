@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { Button, Container, Form, InputGroup, Modal } from "react-bootstrap";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
+import { Expense } from "./api/expense";
 
 const fetcher = async (uri: string) => {
   const response = await fetch(uri);
@@ -115,15 +116,20 @@ export default withPageAuthRequired(function Expense() {
                 }
               >
                 <option value={undefined}>Выберите расход...</option>
-                {expenses["expenses"]
-                  .filter((e: any[]) => !!e[1])
-                  .map((e: any[], index: number) => {
-                    return (
-                      <option key={"Expense." + index} value={index}>
-                        {e.join(" - ")}alethea
-                      </option>
-                    );
-                  })}
+                {expenses["expenses"].map((e: Expense, index: number) => {
+                  return (
+                    <option key={"Expense." + index} value={index}>
+                      {[
+                        e.date,
+                        e.item,
+                        e.cost,
+                        e.category,
+                        e.card,
+                        e.person,
+                      ].join(" - ")}
+                    </option>
+                  );
+                })}
               </Form.Select>
             </Form.Group>
             <Form.Group hidden={!isOffset} className="mb-3">
@@ -137,13 +143,14 @@ export default withPageAuthRequired(function Expense() {
                   type="number"
                   step={0.01}
                   onChange={(event) => {
-                    const expense = expenses["expenses"].at(offsetExpense);
-                    setDate(moment(expense[0], "l").toDate());
-                    setItem("Offset - " + expense[1]);
-                    setCategory(expense[2]);
+                    const expense: Expense =
+                      expenses["expenses"].at(offsetExpense);
+                    setDate(moment(expense.date, "l").toDate());
+                    setItem("Offset - " + expense.item);
+                    setCategory(expense.category);
                     setCost(-1 * parseFloat(event.target.value));
                     setCard("");
-                    setPerson(expense[5]);
+                    setPerson(expense.person);
                   }}
                   placeholder="Введите сумму..."
                 ></Form.Control>

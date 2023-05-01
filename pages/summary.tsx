@@ -1,4 +1,4 @@
-import { Col, Container, Row } from "react-bootstrap";
+import { Card, Col, Container, Row, Table } from "react-bootstrap";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import useSWR from "swr";
 import moment from "moment";
@@ -13,6 +13,7 @@ import {
   BarElement,
   Title,
 } from "chart.js";
+import { Expense } from "./api/expense";
 
 Chart.register(
   ArcElement,
@@ -23,15 +24,6 @@ Chart.register(
   BarElement,
   Title
 );
-
-interface Expense {
-  date: string;
-  item: string;
-  category: string;
-  cost: number;
-  card: string;
-  person: string;
-}
 
 const fetcher = async (uri: string) => {
   const response = await fetch(uri);
@@ -55,16 +47,7 @@ function getExpenseChartData(data?: any) {
       expensesByCard: [],
       expensesByPerson: [],
     };
-  const expenses: Expense[] = data.expenses.map((e: any[]) => {
-    return {
-      date: e[0],
-      item: e[1],
-      category: e[2],
-      cost: e[3],
-      card: e[4],
-      person: e[5],
-    } as Expense;
-  });
+  const expenses: Expense[] = data.expenses;
 
   const categories = new Set(
     expenses
@@ -140,71 +123,118 @@ export default withPageAuthRequired(function Summary() {
         {!isLoading && data ? (
           <>
             <h2>{data.total}</h2>
-            <Row className="py-3">
-              <Col sm></Col>
-              <Col sm>
-                <Bar
-                  data={{
-                    labels: expensesByCard.map((e) => e.card),
-                    datasets: [
-                      {
-                        label: "Cards",
-                        data: expensesByCard.map((e) => e.sum),
-                        backgroundColor: random_rgba(),
-                      },
-                    ],
-                  }}
-                ></Bar>
+            <Row className="g-4">
+              <Col sm={12}>
+                <Card>
+                  <Card.Body>
+                    <div style={{ display: "block", height: "25vh" }}>
+                      <Bar
+                        options={{ maintainAspectRatio: false }}
+                        data={{
+                          labels: expensesByCard.map((e) => e.card),
+                          datasets: [
+                            {
+                              label: "Cards",
+                              data: expensesByCard.map((e) => e.sum),
+                              backgroundColor: random_rgba(),
+                            },
+                          ],
+                        }}
+                      />
+                    </div>
+                  </Card.Body>
+                </Card>
               </Col>
-              <Col sm></Col>
-            </Row>
-            <Row className="py-3">
-              <Col sm />
-              <Col sm>
-                <Doughnut
-                  options={{
-                    plugins: {
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                  }}
-                  data={{
-                    labels: expensesByCategory.map((e) => e.category),
-                    datasets: [
-                      {
-                        data: expensesByCategory.map((e) => e.sum),
-                        backgroundColor: expensesByCategory.map((_e) => {
-                          return random_rgba();
-                        }),
-                      },
-                    ],
-                  }}
-                />
+              <Col sm={6}>
+                <Card>
+                  <Card.Body>
+                    <div style={{ display: "block", height: "25vh" }}>
+                      <Doughnut
+                        options={{
+                          plugins: {
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          maintainAspectRatio: false,
+                        }}
+                        data={{
+                          labels: expensesByCategory.map((e) => e.category),
+                          datasets: [
+                            {
+                              data: expensesByCategory.map((e) => e.sum),
+                              backgroundColor: expensesByCategory.map((_e) => {
+                                return random_rgba();
+                              }),
+                            },
+                          ],
+                        }}
+                      />
+                    </div>
+                  </Card.Body>
+                </Card>
               </Col>
-              <Col sm>
-                <Doughnut
-                  options={{
-                    plugins: {
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                  }}
-                  data={{
-                    labels: expensesByPerson.map((e) => e.person),
-                    datasets: [
-                      {
-                        data: expensesByPerson.map((e) => e.sum),
-                        backgroundColor: expensesByPerson.map((_e) => {
-                          return random_rgba();
-                        }),
-                      },
-                    ],
-                  }}
-                />
+              <Col sm={6}>
+                <Card>
+                  <Card.Body>
+                    <div style={{ display: "block", height: "25vh" }}>
+                      <Doughnut
+                        options={{
+                          plugins: {
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          maintainAspectRatio: false,
+                        }}
+                        data={{
+                          labels: expensesByPerson.map((e) => e.person),
+                          datasets: [
+                            {
+                              data: expensesByPerson.map((e) => e.sum),
+                              backgroundColor: expensesByPerson.map((_e) => {
+                                return random_rgba();
+                              }),
+                            },
+                          ],
+                        }}
+                      />
+                    </div>
+                  </Card.Body>
+                </Card>
               </Col>
-              <Col sm />
+              <Col sm={12}>
+                <Table responsive striped bordered hover>
+                  <thead>
+                    <tr>
+                      <th>Дата</th>
+                      <th>Товар</th>
+                      <th>Категория</th>
+                      <th>Стоимость</th>
+                      <th>Карточка</th>
+                      <th>Персона</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data && data.expenses ? (
+                      data.expenses.map((e: Expense) => {
+                        return (
+                          <tr>
+                            <td>{e.date}</td>
+                            <td>{e.item}</td>
+                            <td>{e.category}</td>
+                            <td>{e.cost}</td>
+                            <td>{e.card}</td>
+                            <td>{e.person}</td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <></>
+                    )}
+                  </tbody>
+                </Table>
+              </Col>
             </Row>
           </>
         ) : (

@@ -6,6 +6,15 @@ import currency from "currency.js";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
+export interface Expense {
+  date: string;
+  item: string;
+  category: string;
+  cost: number;
+  card: string;
+  person: string;
+}
+
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -24,11 +33,23 @@ export default withApiAuthRequired(async function handler(
       data = {
         month: month,
         total: result.data.values?.at(0)?.at(0),
-        expenses: result.data.values?.slice(1).map((e) => {
-          e.shift();
-          e[3] = currency(e[3]);
-          return e;
-        }),
+        expenses: result.data.values
+          ?.slice(1)
+          .filter((e) => !!e[1])
+          .map((e) => {
+            e.shift();
+            return {
+              date: e[0],
+              item: e[1],
+              category: e[2],
+              cost: currency(e[3]) as unknown as number,
+              card: e[4],
+              person: e[5],
+            } as Expense;
+          })
+          .sort((a, b) => {
+            return moment(a.date, "l").unix() - moment(b.date, "l").unix();
+          }),
       };
     } else if (req.method === "POST") {
       const { date, item, category, cost, card, person } = req.body;
