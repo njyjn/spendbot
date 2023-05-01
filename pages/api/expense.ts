@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import moment from "moment";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { getService } from "../../utils/google";
+import currency from "currency.js";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
@@ -18,11 +19,16 @@ export default withApiAuthRequired(async function handler(
     if (req.method === "GET") {
       const result = await service.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `'${month}'!A1:A`,
+        range: `'${month}'!A1:G`,
       });
       data = {
         month: month,
-        total: result.data.values?.flat()[1],
+        total: result.data.values?.at(0)?.at(0),
+        expenses: result.data.values?.slice(1).map((e) => {
+          e.shift();
+          e[3] = currency(e[3]);
+          return e;
+        }),
       };
     } else if (req.method === "POST") {
       const { date, item, category, cost, card, person } = req.body;

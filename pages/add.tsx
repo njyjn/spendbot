@@ -174,7 +174,9 @@ export default withPageAuthRequired(function Expense() {
         ) : (
           <p>Загрузка...</p>
         )}
-        <p className="mt-3 text-center">⚠️ Чтобы внести изменения, посетите Google Таблицу</p>
+        <p className="mt-3 text-center">
+          ⚠️ Чтобы внести изменения, посетите Google Таблицу
+        </p>
       </Container>
     </>
   );

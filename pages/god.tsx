@@ -14,8 +14,8 @@ const fetcher = async (uri: string) => {
 export default withPageAuthRequired(function Expense() {
   const router = useRouter();
 
-  const month = moment().add(1, 'months').format("MMM YY");
-  
+  const month = moment().add(1, "months").format("MMM YY");
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
