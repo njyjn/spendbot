@@ -119,11 +119,17 @@ export default withPageAuthRequired(function Summary() {
     <>
       <Container fluid className="text-center center">
         <h1>📊 Сводка</h1>
-        <p>в {month} года вы все потратили</p>
         {!isLoading && data ? (
           <>
-            <h2>{data.total}</h2>
             <Row className="g-4">
+              <Col sm={12}>
+                <Card>
+                  <Card.Body>
+                    <p>в {month} года вы все потратили</p>
+                    <h2>{data.total}</h2>
+                  </Card.Body>
+                </Card>
+              </Col>
               <Col sm={12}>
                 <Card>
                   <Card.Body>

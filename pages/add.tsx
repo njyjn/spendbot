@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import { Button, Container, Form, InputGroup, Modal } from "react-bootstrap";
+import {
+  Button,
+  Container,
+  Dropdown,
+  DropdownButton,
+  Form,
+  InputGroup,
+  Modal,
+} from "react-bootstrap";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
 import { Expense } from "./api/expense";
@@ -23,7 +31,8 @@ export default withPageAuthRequired(function Expense() {
   const [date, setDate] = useState(new Date(Date.now()));
   const [item, setItem] = useState("");
   const [category, setCategory] = useState("");
-  const [cost, setCost] = useState(0);
+  const [cost, setCost] = useState("0.0");
+  const [costCurrency, setCostCurrency] = useState("SGD");
   const [card, setCard] = useState("");
 
   const month = moment(date).format("MMM YY");
@@ -71,6 +80,18 @@ export default withPageAuthRequired(function Expense() {
             onSubmit={async (event) => {
               event.preventDefault();
               setIsLoading(true);
+              let costAfterConversion = cost;
+              if (!isOffset && costCurrency !== "SGD") {
+                const rate = (
+                  definitions["fx"] as { currency: string; rate: number }[]
+                ).find((f) => f.currency === costCurrency)?.rate;
+                if (rate) {
+                  costAfterConversion = (
+                    (parseFloat(cost) * 1.0) /
+                    rate
+                  ).toFixed(2);
+                }
+              }
               const response = await fetch(
                 `/spend/api/expense?month=${month}`,
                 {
@@ -82,7 +103,7 @@ export default withPageAuthRequired(function Expense() {
                     date: date.toDateString(),
                     item,
                     category,
-                    cost,
+                    cost: costAfterConversion,
                     card,
                     person,
                   }),
@@ -106,7 +127,7 @@ export default withPageAuthRequired(function Expense() {
               ></Form.Check>
             </Form.Group>
             <Form.Group hidden={!isOffset} className="mb-3">
-              <Form.Label for="expense">💸 Расход</Form.Label>
+              <Form.Label htmlFor="expense">💸 Расход</Form.Label>
               <Form.Select
                 id="expense"
                 name="expense"
@@ -148,7 +169,7 @@ export default withPageAuthRequired(function Expense() {
                     setDate(moment(expense.date, "l").toDate());
                     setItem("Offset - " + expense.item);
                     setCategory(expense.category);
-                    setCost(-1 * parseFloat(event.target.value));
+                    setCost((-1.0 * parseFloat(event.target.value)).toFixed(2));
                     setCard("");
                     setPerson(expense.person);
                   }}
@@ -157,7 +178,7 @@ export default withPageAuthRequired(function Expense() {
               </InputGroup>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label for="person">🧍 Человек</Form.Label>
+              <Form.Label htmlFor="person">🧍 Человек</Form.Label>
               <Form.Select
                 id="person"
                 name="person"
@@ -175,7 +196,7 @@ export default withPageAuthRequired(function Expense() {
               </Form.Select>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label for="date">📆 Дату</Form.Label>
+              <Form.Label htmlFor="date">📆 Дату</Form.Label>
               <Form.Control
                 id="date"
                 name="date"
@@ -185,7 +206,7 @@ export default withPageAuthRequired(function Expense() {
               ></Form.Control>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label for="item">💁 Расход</Form.Label>
+              <Form.Label htmlFor="item">💁 Расход</Form.Label>
               <Form.Control
                 id="item"
                 name="item"
@@ -196,7 +217,7 @@ export default withPageAuthRequired(function Expense() {
               ></Form.Control>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label for="category">📦 Категория</Form.Label>
+              <Form.Label htmlFor="category">📦 Категория</Form.Label>
               <Form.Select
                 id="category"
                 name="category"
@@ -214,22 +235,53 @@ export default withPageAuthRequired(function Expense() {
               </Form.Select>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label for="cost">💰 Сумма</Form.Label>
+              <Form.Label htmlFor="cost">💰 Сумма</Form.Label>
               <InputGroup className="mb-2">
-                <InputGroup.Text>SGD</InputGroup.Text>
+                <DropdownButton
+                  variant="outline-secondary"
+                  title={costCurrency}
+                >
+                  {["SGD", "USD", "AUD", "IDR", "JPY", "MYR", "PHP"].map(
+                    (c) => {
+                      return (
+                        <Dropdown.Item
+                          key={c}
+                          onClick={() => setCostCurrency(c)}
+                        >
+                          {c}
+                        </Dropdown.Item>
+                      );
+                    }
+                  )}
+                </DropdownButton>
                 <Form.Control
                   id="cost"
                   name="cost"
                   required={!isOffset}
                   type="number"
                   step={0.01}
-                  onChange={(event) => setCost(parseFloat(event.target.value))}
+                  onChange={(event) => {
+                    let cost = parseFloat(event.target.value).toFixed(2);
+                    setCost(cost);
+                  }}
                   placeholder="Введите сумму..."
                 ></Form.Control>
               </InputGroup>
+              <Form.Text muted>
+                {costCurrency !== "SGD"
+                  ? `SGD 1 ≈ ${costCurrency} ${
+                      definitions["fx"].find(
+                        (f: { currency: string; rate: number }) =>
+                          f.currency === costCurrency
+                      )?.rate || "?"
+                    } по состоянию на ${moment().format(
+                      "LLL"
+                    )}. Стоимость будет конвертирована в SGD при подаче заявки.`
+                  : ""}
+              </Form.Text>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label for="card">💳 Карта</Form.Label>
+              <Form.Label htmlFor="card">💳 Карта</Form.Label>
               <Form.Select
                 id="card"
                 name="card"

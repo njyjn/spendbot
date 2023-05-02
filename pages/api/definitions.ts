@@ -16,7 +16,7 @@ export default withApiAuthRequired(async function handler(
     if (req.method === "GET") {
       const result = await service.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `'Definitions'!A1:C`,
+        range: `'Definitions'!A1:E`,
         majorDimension: "COLUMNS",
       });
 
@@ -25,6 +25,12 @@ export default withApiAuthRequired(async function handler(
           cards: result.data.values[0].slice(1).sort(),
           categories: result.data.values[1].slice(1).sort(),
           persons: result.data.values[2].slice(1).sort(),
+          fx: result.data.values[3].slice(1).map((f, i) => {
+            return {
+              currency: f,
+              rate: result.data.values?.at(4)?.slice(1).at(i),
+            };
+          }),
         };
       }
     }
