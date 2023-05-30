@@ -30,7 +30,7 @@ export default withApiAuthRequired(async function handler(
 ) {
   const service = await getService();
 
-  let data: Networth;
+  let data;
 
   try {
     if (req.method === "GET") {
