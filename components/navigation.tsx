@@ -11,6 +11,7 @@ export default function Navigation() {
         <Navbar.Toggle aria-controls="responsive-navbar-nav"></Navbar.Toggle>
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto">
+            <Nav.Link href="/spend/overview">💰 Чистая стоимость</Nav.Link>
             <Nav.Link href="/spend/summary">📊 Сводка</Nav.Link>
             <Nav.Link href="/spend/add">💸 Добавить</Nav.Link>
             <Nav.Link href="/spend/god">🌈 Бог</Nav.Link>
