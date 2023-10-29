@@ -48,7 +48,7 @@ export default withApiAuthRequired(async function handler(
             } as Expense;
           })
           .sort((a, b) => {
-            return moment(a.date, "l").unix() - moment(b.date, "l").unix();
+            return moment(b.date, "l").unix() - moment(a.date, "l").unix();
           }),
       };
     } else if (req.method === "POST") {
