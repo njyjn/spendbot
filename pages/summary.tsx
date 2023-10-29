@@ -22,6 +22,7 @@ import {
   Title,
 } from "chart.js";
 import { Expense } from "./api/expense";
+import { useState } from "react";
 
 Chart.register(
   ArcElement,
@@ -115,43 +116,62 @@ function getExpenseChartData(data?: any) {
 }
 
 export default withPageAuthRequired(function Summary() {
-  const month = moment().format("MMM YY");
-  const { data, error, isLoading } = useSWR(
-    `/spend/api/expense?month=${month}`,
-    fetcher
-  );
+  const [month, setMonth] = useState(moment().format("MMM YY"));
+  const {
+    data: monthsData,
+    error: monthsError,
+    isLoading: monthsIsLoading,
+  } = useSWR("/spend/api/expense/months", fetcher);
+  const {
+    data: expenseData,
+    error: expenseError,
+    isLoading: expenseIsLoading,
+  } = useSWR(`/spend/api/expense?month=${month}`, fetcher);
   let { expensesByCategory, expensesByCard, expensesByPerson } =
-    getExpenseChartData(data);
+    getExpenseChartData(expenseData);
 
   return (
     <>
       <Container fluid className="text-center center">
         <h1>📊 Сводка</h1>
-        {!isLoading && data ? (
-          <>
-            <Row className="g-4">
-              <Col sm={12}>
-                <Card>
-                  <Card.Body>
-                    <p>
-                      в{" "}
-                      <DropdownButton
-                        id="dropdown-month-selector"
-                        title={month}
-                        variant="light"
-                      >
-                        <Dropdown.Item disabled href="#">
-                          Вскоре! Вы сможете просмотреть расходы за предыдущие
-                          месяцы.
-                        </Dropdown.Item>
-                      </DropdownButton>{" "}
-                      года было потрачено
-                    </p>
-                    <p></p>
-                    <h2>{data.total}</h2>
-                  </Card.Body>
-                </Card>
-              </Col>
+        <Row className="g-4">
+          <Col sm={12}>
+            <Card>
+              <Card.Body>
+                <p>
+                  в{" "}
+                  <DropdownButton
+                    id="dropdown-month-selector"
+                    title={month}
+                    variant="light"
+                    disabled={expenseIsLoading}
+                    onSelect={(e) => {
+                      if (e) {
+                        setMonth(e);
+                      }
+                    }}
+                  >
+                    {!monthsIsLoading && monthsData && monthsData["months"] ? (
+                      monthsData["months"].map((m: string) => (
+                        <Dropdown.Item eventKey={m}>{m}</Dropdown.Item>
+                      ))
+                    ) : (
+                      <></>
+                    )}
+                  </DropdownButton>{" "}
+                  года было потрачено
+                </p>
+                <p></p>
+                <h2>
+                  {!expenseIsLoading && expenseData
+                    ? expenseData.total
+                    : "Загрузка..."}
+                </h2>
+              </Card.Body>
+            </Card>
+          </Col>
+          {!expenseIsLoading && expenseData ? (
+            <>
               <Col sm={12}>
                 <Card>
                   <Card.Body>
@@ -244,8 +264,8 @@ export default withPageAuthRequired(function Summary() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data && data.expenses ? (
-                      data.expenses.map((e: Expense, index: number) => {
+                    {expenseData && expenseData.expenses ? (
+                      expenseData.expenses.map((e: Expense, index: number) => {
                         return (
                           <tr key={index}>
                             <td>{e.date}</td>
@@ -263,11 +283,11 @@ export default withPageAuthRequired(function Summary() {
                   </tbody>
                 </Table>
               </Col>
-            </Row>
-          </>
-        ) : (
-          "Загрузка..."
-        )}
+            </>
+          ) : (
+            <></>
+          )}
+        </Row>
       </Container>
     </>
   );
