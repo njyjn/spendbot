@@ -153,7 +153,9 @@ export default withPageAuthRequired(function Summary() {
                   >
                     {!monthsIsLoading && monthsData && monthsData["months"] ? (
                       monthsData["months"].map((m: string) => (
-                        <Dropdown.Item eventKey={m}>{m}</Dropdown.Item>
+                        <Dropdown.Item key={m} eventKey={m}>
+                          {m}
+                        </Dropdown.Item>
                       ))
                     ) : (
                       <></>
