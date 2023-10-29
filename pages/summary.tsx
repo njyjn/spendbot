@@ -1,4 +1,12 @@
-import { Card, Col, Container, Row, Table } from "react-bootstrap";
+import {
+  Card,
+  Col,
+  Container,
+  Dropdown,
+  DropdownButton,
+  Row,
+  Table,
+} from "react-bootstrap";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import useSWR from "swr";
 import moment from "moment";
@@ -125,7 +133,21 @@ export default withPageAuthRequired(function Summary() {
               <Col sm={12}>
                 <Card>
                   <Card.Body>
-                    <p>в {month} года вы все потратили</p>
+                    <p>
+                      в{" "}
+                      <DropdownButton
+                        id="dropdown-month-selector"
+                        title={month}
+                        variant="light"
+                      >
+                        <Dropdown.Item disabled href="#">
+                          Вскоре! Вы сможете просмотреть расходы за предыдущие
+                          месяцы.
+                        </Dropdown.Item>
+                      </DropdownButton>{" "}
+                      года было потрачено
+                    </p>
+                    <p></p>
                     <h2>{data.total}</h2>
                   </Card.Body>
                 </Card>
