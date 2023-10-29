@@ -241,14 +241,14 @@ export default withPageAuthRequired(function Expense() {
                   variant="outline-secondary"
                   title={costCurrency}
                 >
-                  {["SGD", "USD", "AUD", "IDR", "JPY", "MYR", "PHP"].map(
-                    (c) => {
+                  {definitions["fx"].map(
+                    (f: { currency: string; rate: number }) => {
                       return (
                         <Dropdown.Item
-                          key={c}
-                          onClick={() => setCostCurrency(c)}
+                          key={f.currency}
+                          onClick={() => setCostCurrency(f.currency)}
                         >
-                          {c}
+                          {f.currency}
                         </Dropdown.Item>
                       );
                     }
