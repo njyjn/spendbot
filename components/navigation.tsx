@@ -7,7 +7,7 @@ export default function Navigation() {
   return (
     <Navbar collapseOnSelect expand="md">
       <Container fluid>
-        <Navbar.Brand href="/spend">🤖 SpendBot</Navbar.Brand>
+        <Navbar.Brand href="/spend">💸 SpendBot</Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav"></Navbar.Toggle>
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto">

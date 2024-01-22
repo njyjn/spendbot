@@ -1,5 +1,5 @@
 import Image from "next/image";
-import homePic from "../public/giphy.gif";
+import homePic from "../public/images/giphy.gif";
 
 import { Inter } from "next/font/google";
 import { Container } from "react-bootstrap";
