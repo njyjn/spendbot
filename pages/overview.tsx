@@ -14,6 +14,8 @@ import {
   Title,
 } from "chart.js";
 import { Allocation, Goal } from "./api/networth";
+import { GetStaticPropsContext } from "next";
+import { useTranslations } from "next-intl";
 
 Chart.register(
   ArcElement,
@@ -22,7 +24,7 @@ Chart.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  Title
+  Title,
 );
 
 const fetcher = async (uri: string) => {
@@ -48,21 +50,33 @@ function random_rgba(transparency: number = 1) {
   );
 }
 
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+  return {
+    props: {
+      messages: (await import(`../messages/${locale}.json`)).default,
+    },
+  };
+}
+
 export default withPageAuthRequired(function Summary() {
   const month = moment().format("MMM YY");
   const { data, error, isLoading } = useSWR(`/spend/api/networth`, fetcher);
-
+  const t = useTranslations("Networth");
   return (
     <>
       <Container fluid className="text-center center">
-        <h1>💰 Чистая стоимость</h1>
+        <h1>💰 {t("title")}</h1>
         {!isLoading && data ? (
           <>
             <Row className="g-4">
               <Col sm={12}>
                 <Card>
                   <Card.Body>
-                    <p>в {month} года ваш собственный капитал составляет</p>
+                    <p>
+                      {t("context", {
+                        month: month,
+                      })}
+                    </p>
                     <h2>{data.total}</h2>
                   </Card.Body>
                 </Card>
@@ -82,17 +96,17 @@ export default withPageAuthRequired(function Summary() {
                         }}
                         data={{
                           labels: data.allocations.map(
-                            (a: Allocation) => a.allocation
+                            (a: Allocation) => a.allocation,
                           ),
                           datasets: [
                             {
                               data: data.allocations.map(
-                                (a: Allocation) => a.absolute * 100
+                                (a: Allocation) => a.absolute * 100,
                               ),
                               backgroundColor: data.allocations.map(
                                 (_a: any) => {
                                   return random_rgba();
-                                }
+                                },
                               ),
                             },
                           ],
@@ -124,12 +138,12 @@ export default withPageAuthRequired(function Summary() {
                           datasets: [
                             {
                               data: data.allocations.map(
-                                (a: Allocation) => a.relative * 100
+                                (a: Allocation) => a.relative * 100,
                               ),
                               backgroundColor: data.allocations.map(
                                 (_a: any) => {
                                   return random_rgba();
-                                }
+                                },
                               ),
                             },
                           ],
@@ -157,13 +171,13 @@ export default withPageAuthRequired(function Summary() {
                         }}
                         data={{
                           labels: data.goals.map(
-                            (g: Goal) => `${g.goal} (${g.value} / ${g.end})`
+                            (g: Goal) => `${g.goal} (${g.value} / ${g.end})`,
                           ),
                           datasets: [
                             {
                               label: "Goals",
                               data: data.goals.map(
-                                (g: Goal) => g.percent * 100
+                                (g: Goal) => g.percent * 100,
                               ),
                               backgroundColor: data.goals.map((g: Goal) => {
                                 if (g.percent >= 1)
@@ -184,7 +198,7 @@ export default withPageAuthRequired(function Summary() {
             </Row>
           </>
         ) : (
-          "Загрузка..."
+          t("loading")
         )}
       </Container>
     </>

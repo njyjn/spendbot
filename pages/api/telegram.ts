@@ -21,7 +21,7 @@ bot.on("message", async (ctx) => {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   try {
     const { body, query } = req;
@@ -63,7 +63,7 @@ export async function handleStartCommand(ctx: TelegrafContext) {
     console.log(`Reply to /start command sent successfully.`);
   } else {
     console.error(
-      `Something went wrong with the /start command. Reply not sent.`
+      `Something went wrong with the /start command. Reply not sent.`,
     );
   }
 }

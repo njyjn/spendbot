@@ -1,18 +1,27 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import useSWR from "swr";
-import { Button, Container, Form, InputGroup, Modal } from "react-bootstrap";
+import { Button, Container, Modal } from "react-bootstrap";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
-import { request } from "http";
+import { useTranslations } from "next-intl";
+import { GetStaticPropsContext } from "next";
 
 const fetcher = async (uri: string) => {
   const response = await fetch(uri);
   return response.json();
 };
 
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+  return {
+    props: {
+      messages: (await import(`../messages/${locale}.json`)).default,
+    },
+  };
+}
+
 export default withPageAuthRequired(function Expense() {
   const router = useRouter();
+  const t = useTranslations("God");
 
   const month = moment().add(1, "months").format("MMM YY");
 
@@ -24,7 +33,7 @@ export default withPageAuthRequired(function Expense() {
       <Container fluid>
         <Modal centered show={isSuccess}>
           <Modal.Body className="text-center">
-            <p>✅ Сделанный!</p>
+            <p>✅ {t("formSubmitSuccess")}</p>
             <Button
               onClick={() => {
                 setIsSuccess(false);
@@ -32,11 +41,11 @@ export default withPageAuthRequired(function Expense() {
               }}
               variant="success"
             >
-              Закрой
+              {t("formSubmitSuccessBack")}
             </Button>
           </Modal.Body>
         </Modal>
-        <h1 className="text-center">🌈 Бог</h1>
+        <h1 className="text-center">🌈 {t("title")}</h1>
         <Button
           className="mt-3"
           style={{ width: "100%" }}
@@ -50,7 +59,11 @@ export default withPageAuthRequired(function Expense() {
             setIsLoading(false);
           }}
         >
-          {isLoading ? "Отправка..." : `🆕 Месяц подготовки к ${month} года`}
+          {isLoading
+            ? t("formSubmitLoading")
+            : `🆕 ${t("formSubmit", {
+                month: month,
+              })}`}
         </Button>
       </Container>
     </>

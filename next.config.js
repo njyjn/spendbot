@@ -4,6 +4,10 @@ const nextConfig = {
   assetPrefix: "/spend",
   reactStrictMode: true,
   trailingSlash: false,
+  i18n: {
+    locales: ["en", "ru"],
+    defaultLocale: "en",
+  },
 };
 
 module.exports = nextConfig;

@@ -16,7 +16,7 @@ export interface Expense {
 
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const service = await getService();
 

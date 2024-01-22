@@ -26,6 +26,8 @@ import {
 import { Expense } from "./api/expense";
 import { useState } from "react";
 import currency from "currency.js";
+import { GetStaticPropsContext } from "next";
+import { useTranslations } from "next-intl";
 
 Chart.register(
   ArcElement,
@@ -36,7 +38,7 @@ Chart.register(
   BarElement,
   Title,
   PointElement,
-  LineElement
+  LineElement,
 );
 
 const fetcher = async (uri: string) => {
@@ -70,7 +72,7 @@ function getExpenseChartData(data?: any) {
       .map((e) => {
         return e.category;
       })
-      .filter((c) => !!c)
+      .filter((c) => !!c),
   );
   const expensesByCategory: { category: string; sum: number }[] = [];
   categories.forEach((c) => {
@@ -88,7 +90,7 @@ function getExpenseChartData(data?: any) {
       .map((e) => {
         return e.card;
       })
-      .filter((c) => !!c)
+      .filter((c) => !!c),
   );
   const expensesByCard: { card: string; sum: number }[] = [];
   cards.forEach((c) => {
@@ -106,7 +108,7 @@ function getExpenseChartData(data?: any) {
       .map((e) => {
         return e.person;
       })
-      .filter((p) => !!p)
+      .filter((p) => !!p),
   );
   const expensesByPerson: { person: string; sum: number }[] = [];
   persons.forEach((p) => {
@@ -154,17 +156,22 @@ function getLastMonthTotalDelta(expenseData: any) {
     } else {
       symbol = "🔻";
     }
-    return (
-      <>
-        {symbol} {delta.format()}
-        <br />с прошлого месяца
-      </>
-    );
+    return `${symbol} ${delta.format()}`;
   }
   return "-";
 }
 
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+  return {
+    props: {
+      messages: (await import(`../messages/${locale}.json`)).default,
+    },
+  };
+}
+
 export default withPageAuthRequired(function Summary() {
+  const t = useTranslations("Summary");
+
   const [month, setMonth] = useState(moment().format("MMM YY"));
   const {
     data: monthsData,
@@ -186,13 +193,13 @@ export default withPageAuthRequired(function Summary() {
   return (
     <>
       <Container fluid className="text-center center">
-        <h1>📊 Сводка</h1>
+        <h1>📊 {t("title")}</h1>
         <Row className="g-4">
           <Col sm={12}>
             <Card>
               <Card.Body>
                 <p>
-                  в{" "}
+                  {t("contextUpper")}{" "}
                   <DropdownButton
                     id="dropdown-month-selector"
                     title={month}
@@ -214,16 +221,20 @@ export default withPageAuthRequired(function Summary() {
                       <></>
                     )}
                   </DropdownButton>{" "}
-                  года было потрачено
+                  {t("contextLower")}
                 </p>
                 <p></p>
                 {!expenseIsLoading && expenseData ? (
                   <>
                     <h2>{expenseData.total}</h2>
-                    <p>{getLastMonthTotalDelta(expenseData)}</p>
+                    <p>
+                      {getLastMonthTotalDelta(expenseData)}
+                      <br />
+                      {t("contextSince")}
+                    </p>
                   </>
                 ) : (
-                  <h2>Загрузка...</h2>
+                  <h2>{t("loading")}...</h2>
                 )}
               </Card.Body>
             </Card>
@@ -336,12 +347,12 @@ export default withPageAuthRequired(function Summary() {
                 <Table responsive striped bordered hover>
                   <thead>
                     <tr>
-                      <th>Дата</th>
-                      <th>Товар</th>
-                      <th>Категория</th>
-                      <th>Стоимость</th>
-                      <th>Карточка</th>
-                      <th>Персона</th>
+                      <th>{t("tableDate")}</th>
+                      <th>{t("tableItem")}</th>
+                      <th>{t("tableCategory")}</th>
+                      <th>{t("tableAmount")}</th>
+                      <th>{t("tableMethod")}</th>
+                      <th>{t("tablePerson")}</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -13,14 +13,25 @@ import {
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
 import { Expense } from "./api/expense";
+import { useTranslations } from "next-intl";
+import { GetStaticPropsContext } from "next";
 
 const fetcher = async (uri: string) => {
   const response = await fetch(uri);
   return response.json();
 };
 
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+  return {
+    props: {
+      messages: (await import(`../messages/${locale}.json`)).default,
+    },
+  };
+}
+
 export default withPageAuthRequired(function Expense() {
   const router = useRouter();
+  const t = useTranslations("Add");
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -39,11 +50,11 @@ export default withPageAuthRequired(function Expense() {
 
   const { data: definitions, error: definitionsError } = useSWR(
     "/spend/api/definitions",
-    fetcher
+    fetcher,
   );
   const { data: expenses, error: expensesError } = useSWR(
     `/spend/api/expense?month=${month}`,
-    fetcher
+    fetcher,
   );
 
   return (
@@ -51,7 +62,7 @@ export default withPageAuthRequired(function Expense() {
       <Container fluid>
         <Modal centered show={isSuccess}>
           <Modal.Body className="text-center">
-            <p>✅ Сделанный!</p>
+            <p>✅ {t("formSubmitSuccess")}</p>
             <Button
               className="mr-1"
               onClick={() => {
@@ -60,7 +71,7 @@ export default withPageAuthRequired(function Expense() {
               }}
               variant="primary"
             >
-              🔙 Закрой
+              🔙 {t("formSubmitSuccessBack")}
             </Button>
             <Button
               className="ml-1"
@@ -70,11 +81,11 @@ export default withPageAuthRequired(function Expense() {
               }}
               variant="secondary"
             >
-              📊 Перейти к сводке
+              📊 {t("formSubmitSuccessGoToSummary")}
             </Button>
           </Modal.Body>
         </Modal>
-        <h1 className="text-center">💸 Добавить</h1>
+        <h1 className="text-center">🧮 {t("title")}</h1>
         {definitions && expenses ? (
           <Form
             onSubmit={async (event) => {
@@ -107,7 +118,7 @@ export default withPageAuthRequired(function Expense() {
                     card,
                     person,
                   }),
-                }
+                },
               );
               if ((await response.json()).ok) {
                 setIsSuccess(true);
@@ -120,14 +131,14 @@ export default withPageAuthRequired(function Expense() {
                 type="switch"
                 id="isOffset"
                 name="isOffset"
-                label="Компенсировать?"
+                label={t("formIsCompensation")}
                 onChange={() => {
                   setIsOffset(!isOffset);
                 }}
               ></Form.Check>
             </Form.Group>
             <Form.Group hidden={!isOffset} className="mb-3">
-              <Form.Label htmlFor="expense">💸 Расход</Form.Label>
+              <Form.Label htmlFor="expense">💁 {t("formItem")}</Form.Label>
               <Form.Select
                 id="expense"
                 name="expense"
@@ -136,7 +147,9 @@ export default withPageAuthRequired(function Expense() {
                   setOffsetExpense(parseInt(event.target.value))
                 }
               >
-                <option value={undefined}>Выберите расход...</option>
+                <option value={undefined}>
+                  {t("formSelectCompensationItem")}
+                </option>
                 {expenses["expenses"].map((e: Expense, index: number) => {
                   return (
                     <option key={"Expense." + index} value={index}>
@@ -173,19 +186,19 @@ export default withPageAuthRequired(function Expense() {
                     setCard("");
                     setPerson(expense.person);
                   }}
-                  placeholder="Введите сумму..."
+                  placeholder={t("formInputCompensationAmount")}
                 ></Form.Control>
               </InputGroup>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="person">🧍 Человек</Form.Label>
+              <Form.Label htmlFor="person">🧍 {t("formPerson")}</Form.Label>
               <Form.Select
                 id="person"
                 name="person"
                 required={!isOffset}
                 onChange={(event) => setPerson(event.target.value)}
               >
-                <option value={undefined}>Выберите человека...</option>
+                <option value={undefined}>{t("formSelectPerson")}</option>
                 {definitions["persons"].map((e: string) => {
                   return (
                     <option key={"Person." + e} value={e}>
@@ -196,7 +209,7 @@ export default withPageAuthRequired(function Expense() {
               </Form.Select>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="date">📆 Дату</Form.Label>
+              <Form.Label htmlFor="date">📆 {t("formDate")}</Form.Label>
               <Form.Control
                 id="date"
                 name="date"
@@ -206,25 +219,25 @@ export default withPageAuthRequired(function Expense() {
               ></Form.Control>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="item">💁 Расход</Form.Label>
+              <Form.Label htmlFor="item">💁 {t("formItem")}</Form.Label>
               <Form.Control
                 id="item"
                 name="item"
                 required={!isOffset}
                 type="text"
                 onChange={(event) => setItem(event.target.value)}
-                placeholder="Введите название расхода..."
+                placeholder={t("formInputItem")}
               ></Form.Control>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="category">📦 Категория</Form.Label>
+              <Form.Label htmlFor="category">📦 {t("formCategory")}</Form.Label>
               <Form.Select
                 id="category"
                 name="category"
                 required={!isOffset}
                 onChange={(event) => setCategory(event.target.value)}
               >
-                <option value={undefined}>Выберите категорию...</option>
+                <option value={undefined}>{t("formSelectCategory")}</option>
                 {definitions["categories"].map((e: string) => {
                   return (
                     <option key={"Category." + e} value={e}>
@@ -235,7 +248,7 @@ export default withPageAuthRequired(function Expense() {
               </Form.Select>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="cost">💰 Сумма</Form.Label>
+              <Form.Label htmlFor="cost">💰 {t("formAmount")}</Form.Label>
               <InputGroup className="mb-2">
                 <DropdownButton
                   variant="outline-secondary"
@@ -251,7 +264,7 @@ export default withPageAuthRequired(function Expense() {
                           {f.currency}
                         </Dropdown.Item>
                       );
-                    }
+                    },
                   )}
                 </DropdownButton>
                 <Form.Control
@@ -264,31 +277,32 @@ export default withPageAuthRequired(function Expense() {
                     let cost = parseFloat(event.target.value).toFixed(2);
                     setCost(cost);
                   }}
-                  placeholder="Введите сумму..."
+                  placeholder={t("formInputAmount")}
                 ></Form.Control>
               </InputGroup>
               <Form.Text muted>
                 {costCurrency !== "SGD"
-                  ? `SGD 1 ≈ ${costCurrency} ${
-                      definitions["fx"].find(
-                        (f: { currency: string; rate: number }) =>
-                          f.currency === costCurrency
-                      )?.rate || "?"
-                    } по состоянию на ${moment().format(
-                      "LLL"
-                    )}. Стоимость будет конвертирована в SGD при подаче заявки.`
+                  ? t("formInputHelpCurrency", {
+                      costCurrency: costCurrency,
+                      costCurrencyValue:
+                        definitions["fx"].find(
+                          (f: { currency: string; rate: number }) =>
+                            f.currency === costCurrency,
+                        )?.rate || "?",
+                      asOf: moment().format("LLL"),
+                    })
                   : ""}
               </Form.Text>
             </Form.Group>
             <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="card">💳 Карта</Form.Label>
+              <Form.Label htmlFor="card">💳 {t("formMethod")}</Form.Label>
               <Form.Select
                 id="card"
                 name="card"
                 required={!isOffset}
                 onChange={(event) => setCard(event.target.value)}
               >
-                <option value={undefined}>Выберите карту...</option>
+                <option value={undefined}>{t("formSelectMethod")}</option>
                 {definitions["cards"].map((e: string) => {
                   return (
                     <option key={"Card." + e} value={e}>
@@ -304,15 +318,13 @@ export default withPageAuthRequired(function Expense() {
               variant="success"
               type="submit"
             >
-              {isLoading ? "Отправка..." : "➕ Представить"}
+              {isLoading ? t("formSubmitLoading") : `➕ ${t("formSubmit")}`}
             </Button>
           </Form>
         ) : (
-          <p>Загрузка...</p>
+          <p>{t("loading")}</p>
         )}
-        <p className="mt-3 text-center">
-          ⚠️ Чтобы внести изменения, посетите Google Таблицу
-        </p>
+        <p className="mt-3 text-center">⚠️ {t("formHelpEdits")}</p>
       </Container>
     </>
   );

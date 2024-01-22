@@ -6,7 +6,7 @@ const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const service = await getService();
 

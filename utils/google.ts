@@ -7,7 +7,7 @@ export async function getService() {
     version: "v4",
     auth: new google.auth.GoogleAuth({
       credentials: JSON.parse(
-        process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || ""
+        process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || "",
       ),
       scopes: SCOPES,
     }),

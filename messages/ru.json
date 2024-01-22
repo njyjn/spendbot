@@ -1,0 +1,65 @@
+{
+  "Navigation": {
+    "networth": "Чистая стоимость",
+    "summary": "Сводка",
+    "add": "Добавить",
+    "god": "Бог",
+    "hello": "Привет",
+    "login": "Войти",
+    "logout": "Выйти",
+    "locale": "🇷🇺"
+  },
+  "Footer": {
+    "footer": "сделано с"
+  },
+  "Networth": {
+    "title": "Чистая стоимость",
+    "loading": "Загрузка...",
+    "context": "в {month} года ваш собственный капитал составляет"
+  },
+  "Summary": {
+    "title": "Сводка",
+    "loading": "Загрузка",
+    "contextUpper": "в",
+    "contextLower": "года было потрачено",
+    "contextSince": "с прошлого месяца",
+    "tableDate": "Дата",
+    "tableItem": "Товар",
+    "tableCategory": "Категория",
+    "tableAmount": "Стоимость",
+    "tableMethod": "Карточка",
+    "tablePerson": "Персона"
+  },
+  "Add": {
+    "title": "Добавить",
+    "loading": "Загрузка...",
+    "formIsCompensation": "Компенсировать?",
+    "formSelectCompensationItem": "Выберите расход...",
+    "formInputCompensationAmount": "Введите сумму...",
+    "formPerson": "Человек",
+    "formSelectPerson": "Выберите человека...",
+    "formDate": "Дату",
+    "formItem": "Расход",
+    "formInputItem": "Введите название расхода...",
+    "formCategory": "Категория",
+    "formSelectCategory": "Выберите категорию...",
+    "formAmount": "Сумма",
+    "formInputAmount": "Введите сумму...",
+    "formInputHelpCurrency": "SGD 1 ≈ {costCurrency} {costCurrencyValue} по состоянию на {asOf}. Стоимость будет конвертирована в SGD при подаче заявки.",
+    "formMethod": "Карта",
+    "formSelectMethod": "Выберите карту...",
+    "formSubmit": "Представить",
+    "formSubmitLoading": "Отправка...",
+    "formSubmitSuccess": "Сделанный!",
+    "formSubmitSuccessBack": "Закрой",
+    "formSubmitSuccessGoToSummary": "Перейти к сводке",
+    "formHelpEdits": "Чтобы внести изменения, посетите Google Таблицу"
+  },
+  "God": {
+    "title": "Бог",
+    "formSubmit": "Месяц подготовки к {month} года",
+    "formSubmitLoading": "Отправка...",
+    "formSubmitSuccess": "Сделанный!",
+    "formSubmitSuccessBack": "Закрой"
+  }
+}

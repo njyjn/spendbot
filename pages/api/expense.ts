@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { GetStaticPropsContext, NextApiRequest, NextApiResponse } from "next";
 import moment from "moment";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { getService } from "../../utils/google";
@@ -17,7 +17,7 @@ export interface Expense {
 
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const service = await getService();
   const { month, lookback } = req.query;
@@ -43,7 +43,7 @@ export default withApiAuthRequired(async function handler(
                 `${currentMonth
                   .clone()
                   .subtract(i + 1, "months")
-                  .format("MMM YY")}${DEFAULT_RANGE_NOTATION}`
+                  .format("MMM YY")}${DEFAULT_RANGE_NOTATION}`,
             );
             result = await service.spreadsheets.values.batchGet({
               spreadsheetId: SHEET_ID,

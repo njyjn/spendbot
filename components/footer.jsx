@@ -1,7 +1,10 @@
+import { useTranslations } from "next-intl";
+
 export default function Footer() {
+  const t = useTranslations("Footer");
   return (
     <footer>
-      сделано с ❤️{" "}
+      {t("footer")} ❤️{" "}
       <a
         href="https://www.ngsim.net/"
         target="_blank"
@@ -12,3 +15,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+Footer.messages = ["Footer"];

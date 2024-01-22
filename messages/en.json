@@ -1,0 +1,65 @@
+{
+  "Navigation": {
+    "networth": "Net Worth",
+    "summary": "Summary",
+    "add": "Add",
+    "god": "God",
+    "hello": "Hello",
+    "login": "Login",
+    "logout": "Logout",
+    "locale": "🇺🇸"
+  },
+  "Footer": {
+    "footer": "Made with"
+  },
+  "Networth": {
+    "title": "Net Worth",
+    "loading": "Loading...",
+    "context": "In {month} your net worth is"
+  },
+  "Summary": {
+    "title": "Summary",
+    "loading": "Loading",
+    "contextUpper": "In",
+    "contextLower": "you spent a total of",
+    "contextSince": "since last month",
+    "tableDate": "Date",
+    "tableItem": "Item Name",
+    "tableCategory": "Category",
+    "tableAmount": "Amount",
+    "tableMethod": "Method",
+    "tablePerson": "Person"
+  },
+  "Add": {
+    "title": "Add",
+    "loading": "Loading...",
+    "formIsCompensation": "Offset Expense?",
+    "formSelectCompensationItem": "Select item to offset...",
+    "formInputCompensationAmount": "Enter offset amount...",
+    "formPerson": "Person",
+    "formSelectPerson": "Select person...",
+    "formDate": "Date",
+    "formItem": "Item Name",
+    "formInputItem": "Enter item name...",
+    "formCategory": "Category",
+    "formSelectCategory": "Select category...",
+    "formAmount": "Amount",
+    "formInputAmount": "Enter amount...",
+    "formInputHelpCurrency": "SGD 1 ≈ {costCurrency} {costCurrencyValue} as of {asOf}. Upon submission, the amount will be converted to SGD.",
+    "formMethod": "Method",
+    "formSelectMethod": "Select method...",
+    "formSubmit": "Submit",
+    "formSubmitLoading": "Submitting...",
+    "formSubmitSuccess": "Success!",
+    "formSubmitSuccessBack": "Return",
+    "formSubmitSuccessGoToSummary": "View Summary",
+    "formHelpEdits": "To make changes to an already submitted expense, please visit Google Sheets"
+  },
+  "God": {
+    "title": "God",
+    "formSubmit": "Add new sheet for {month}",
+    "formSubmitLoading": "Submitting...",
+    "formSubmitSuccess": "Success!",
+    "formSubmitSuccessBack": "Back"
+  }
+}
