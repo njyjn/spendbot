@@ -14,14 +14,16 @@ export default function Navigation() {
   return (
     <Navbar collapseOnSelect expand="md">
       <Container fluid>
-        <Navbar.Brand href="/spend">💸 SpendBot</Navbar.Brand>
+        <Link href="/" locale={locale} className="navbar-brand">
+          💸 SpendBot
+        </Link>
         <Navbar.Toggle aria-controls="responsive-navbar-nav"></Navbar.Toggle>
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link href="/spend/overview">💰 {t("networth")}</Nav.Link>
-            <Nav.Link href="/spend/summary">📊 {t("summary")}</Nav.Link>
-            <Nav.Link href="/spend/add">🧮 {t("add")}</Nav.Link>
-            <Nav.Link href="/spend/god">🌈 {t("god")}</Nav.Link>
+            <Link href="/overview" locale={locale} className="nav-link">💰 {t("networth")}</Link>
+            <Link href="/summary" locale={locale} className="nav-link">📊 {t("summary")}</Link>
+            <Link href="/add" locale={locale} className="nav-link">🧮 {t("add")}</Link>
+            <Link href="/god" locale={locale} className="nav-link">🌈 {t("god")}</Link>
           </Nav>
           <Nav>
             {user ? (
@@ -29,12 +31,14 @@ export default function Navigation() {
                 title={`👋 ${t("hello")}, ${user.name}!`}
                 id="collapsible-nav-dropdown"
               >
-                <NavDropdown.Item href="/spend/api/auth/logout">
-                  🌚 {t("logout")}
+                <NavDropdown.Item>
+                  <Link href="/api/auth/logout" locale={locale} className="nav-link">
+                    🌚 {t("logout")}
+                  </Link>
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <Nav.Link href="/spend/api/auth/login">🌞 {t("login")}</Nav.Link>
+              <Link href="/api/auth/login" locale={locale} className={"nav-link"}>🌞 {t("login")}</Link>
             )}
             <Link href={route} locale={otherLocale} className="nav-link">
               {t("locale", { locale: otherLocale })}
