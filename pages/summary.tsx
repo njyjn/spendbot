@@ -10,7 +10,7 @@ import {
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import useSWR from "swr";
 import moment from "moment";
-import { Bar, Doughnut } from "react-chartjs-2";
+import { Bar, Doughnut, Line } from "react-chartjs-2";
 import {
   Chart,
   CategoryScale,
@@ -20,9 +20,12 @@ import {
   LinearScale,
   BarElement,
   Title,
+  PointElement,
+  LineElement,
 } from "chart.js";
 import { Expense } from "./api/expense";
 import { useState } from "react";
+import currency from "currency.js";
 
 Chart.register(
   ArcElement,
@@ -31,7 +34,9 @@ Chart.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  Title
+  Title,
+  PointElement,
+  LineElement
 );
 
 const fetcher = async (uri: string) => {
@@ -55,9 +60,11 @@ function getExpenseChartData(data?: any) {
       expensesByCategory: [],
       expensesByCard: [],
       expensesByPerson: [],
+      expensesByMonth: [],
     };
   const expenses: Expense[] = data.expenses;
-
+  const lookbackExpenses: { month: string; values: Expense[] }[] =
+    data.lookback;
   const categories = new Set(
     expenses
       .map((e) => {
@@ -112,7 +119,49 @@ function getExpenseChartData(data?: any) {
     });
   });
 
-  return { expensesByCategory, expensesByCard, expensesByPerson };
+  let expensesByMonth: { month: string; sum: number }[] = [];
+  expensesByMonth = [
+    ...lookbackExpenses
+      .map((e) => {
+        return {
+          month: e.month,
+          sum: e.values.map((e) => e.cost).reduce((a, b) => a + b, 0),
+        };
+      })
+      .reverse(),
+    {
+      month: data.month,
+      sum: currency(data.total).value,
+    },
+  ];
+
+  return {
+    expensesByCategory,
+    expensesByCard,
+    expensesByPerson,
+    expensesByMonth,
+  };
+}
+
+function getLastMonthTotalDelta(expenseData: any) {
+  if (expenseData.lastMonthTotal) {
+    const total = currency(expenseData.total);
+    const lastMonthTotal = currency(expenseData.lastMonthTotal);
+    const delta = total.subtract(lastMonthTotal);
+    let symbol = "🔹";
+    if (delta.value > 0) {
+      symbol = "🔺";
+    } else {
+      symbol = "🔻";
+    }
+    return (
+      <>
+        {symbol} {delta.format()}
+        <br />с прошлого месяца
+      </>
+    );
+  }
+  return "-";
 }
 
 export default withPageAuthRequired(function Summary() {
@@ -126,9 +175,13 @@ export default withPageAuthRequired(function Summary() {
     data: expenseData,
     error: expenseError,
     isLoading: expenseIsLoading,
-  } = useSWR(`/spend/api/expense?month=${month}`, fetcher);
-  let { expensesByCategory, expensesByCard, expensesByPerson } =
-    getExpenseChartData(expenseData);
+  } = useSWR(`/spend/api/expense?month=${month}&lookback=5`, fetcher);
+  let {
+    expensesByCategory,
+    expensesByCard,
+    expensesByPerson,
+    expensesByMonth,
+  } = getExpenseChartData(expenseData);
 
   return (
     <>
@@ -164,16 +217,42 @@ export default withPageAuthRequired(function Summary() {
                   года было потрачено
                 </p>
                 <p></p>
-                <h2>
-                  {!expenseIsLoading && expenseData
-                    ? expenseData.total
-                    : "Загрузка..."}
-                </h2>
+                {!expenseIsLoading && expenseData ? (
+                  <>
+                    <h2>{expenseData.total}</h2>
+                    <p>{getLastMonthTotalDelta(expenseData)}</p>
+                  </>
+                ) : (
+                  <h2>Загрузка...</h2>
+                )}
               </Card.Body>
             </Card>
           </Col>
           {!expenseIsLoading && expenseData ? (
             <>
+              <Col sm={12}>
+                <Card>
+                  <Card.Body>
+                    <div style={{ display: "block", height: "25vh" }}>
+                      <Line
+                        options={{ maintainAspectRatio: false }}
+                        data={{
+                          labels: expensesByMonth.map((e) => e.month),
+                          datasets: [
+                            {
+                              label: "Total",
+                              data: expensesByMonth.map((e) => e.sum),
+                              borderColor: random_rgba(),
+                              fill: false,
+                              tension: 0.1,
+                            },
+                          ],
+                        }}
+                      />
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
               <Col sm={12}>
                 <Card>
                   <Card.Body>
