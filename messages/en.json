@@ -10,7 +10,7 @@
     "hello": "Hello",
     "login": "Login",
     "logout": "Logout",
-    "locale": "🇺🇸"
+    "locale": "🇺🇸 en"
   },
   "Footer": {
     "footer": "Made with"
@@ -22,7 +22,7 @@
   },
   "Summary": {
     "title": "Summary",
-    "loading": "Loading",
+    "loading": "Loading...",
     "contextUpper": "In",
     "contextLower": "you spent a total of",
     "contextSince": "since last month",
