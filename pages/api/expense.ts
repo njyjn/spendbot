@@ -1,4 +1,4 @@
-import { GetStaticPropsContext, NextApiRequest, NextApiResponse } from "next";
+import { NextApiRequest, NextApiResponse } from "next";
 import moment from "moment";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { getService } from "../../utils/google";
