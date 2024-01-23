@@ -20,10 +20,18 @@ export default function Navigation() {
         <Navbar.Toggle aria-controls="responsive-navbar-nav"></Navbar.Toggle>
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto">
-            <Link href="/overview" locale={locale} className="nav-link">💰 {t("networth")}</Link>
-            <Link href="/summary" locale={locale} className="nav-link">📊 {t("summary")}</Link>
-            <Link href="/add" locale={locale} className="nav-link">🧮 {t("add")}</Link>
-            <Link href="/god" locale={locale} className="nav-link">🌈 {t("god")}</Link>
+            <Link href="/overview" locale={locale} className="nav-link">
+              💰 {t("networth")}
+            </Link>
+            <Link href="/summary" locale={locale} className="nav-link">
+              📊 {t("summary")}
+            </Link>
+            <Link href="/add" locale={locale} className="nav-link">
+              🧮 {t("add")}
+            </Link>
+            <Link href="/god" locale={locale} className="nav-link">
+              🌈 {t("god")}
+            </Link>
           </Nav>
           <Nav>
             {user ? (
@@ -32,13 +40,23 @@ export default function Navigation() {
                 id="collapsible-nav-dropdown"
               >
                 <NavDropdown.Item>
-                  <Link href="/api/auth/logout" locale={locale} className="nav-link">
+                  <Link
+                    href="/api/auth/logout"
+                    locale={locale}
+                    className="nav-link"
+                  >
                     🌚 {t("logout")}
                   </Link>
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <Link href="/api/auth/login" locale={locale} className={"nav-link"}>🌞 {t("login")}</Link>
+              <Link
+                href="/api/auth/login"
+                locale={locale}
+                className={"nav-link"}
+              >
+                🌞 {t("login")}
+              </Link>
             )}
             <Link href={route} locale={otherLocale} className="nav-link">
               {t("locale", { locale: otherLocale })}

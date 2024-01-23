@@ -3,6 +3,7 @@ import moment from "moment";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { getService } from "../../utils/google";
 import currency from "currency.js";
+import { sheets_v4 } from "googleapis";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const DEFAULT_RANGE_NOTATION = "!A1:G";
@@ -94,30 +95,7 @@ export default withApiAuthRequired(async function handler(
       };
     } else if (req.method === "POST") {
       const { date, item, category, cost, card, person } = req.body;
-      const result = await service.spreadsheets.values.append({
-        spreadsheetId: SHEET_ID,
-        range: `'${month}'!B1:G`,
-        valueInputOption: "USER_ENTERED",
-        insertDataOption: "INSERT_ROWS",
-        requestBody: {
-          range: `'${month}'!B1:G`,
-          majorDimension: "ROWS",
-          values: [
-            [
-              null,
-              moment(date).format("M/D/YY"),
-              item,
-              category,
-              cost,
-              card,
-              person,
-            ],
-          ],
-        },
-      });
-      data = {
-        ok: result.status === 200,
-      };
+      data = addExpense(month, date, item, category, cost, card, person);
     }
     if (data) {
       return res.status(200).json(data);
@@ -146,4 +124,48 @@ function parseValues(values: any[][] | null | undefined) {
     .sort((a, b) => {
       return moment(b.date, "l").unix() - moment(a.date, "l").unix();
     });
+}
+
+export async function addExpense(
+  month: any,
+  date: string,
+  item: string,
+  category: string,
+  cost: any,
+  card: string,
+  person: string,
+) {
+  const service = await getService();
+  try {
+    const result = await service.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: `'${month}'!B1:G`,
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: {
+        range: `'${month}'!B1:G`,
+        majorDimension: "ROWS",
+        values: [
+          [
+            null,
+            moment(date).format("M/D/YY"),
+            item,
+            category,
+            cost,
+            card,
+            person,
+          ],
+        ],
+      },
+    });
+    return {
+      ok: result.status === 200,
+    };
+  } catch (e) {
+    console.error("Failed to add expense:", e);
+    return {
+      ok: false,
+      error: e,
+    };
+  }
 }
