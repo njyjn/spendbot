@@ -74,6 +74,7 @@ const receiptInlineKeyboard: InlineKeyboardButton[][] = [
 
 const bot = new Telegraf<ContextWithSession>(BOT_TOKEN, {
   telegram: {
+    testEnv: process.env.NODE_ENV === "development",
     webhookReply: false,
   },
 });
@@ -217,9 +218,9 @@ export default async function handler(
   res.status(200).json({ ok: true });
 }
 
-export async function handleStartCommand(ctx: TelegrafContext) {
-  let reply = "Hello";
-  const { message } = ctx;
+export async function handleStartCommand(ctx: ContextWithSession) {
+  const { message, from } = ctx;
+  let reply = `Hello, ${from!.first_name} (${from!.id})`;
 
   const didReply = await ctx.reply(reply, {
     reply_to_message_id: message?.message_id,
@@ -232,6 +233,7 @@ export async function handleStartCommand(ctx: TelegrafContext) {
       `Something went wrong with the /start command. Reply not sent.`,
     );
   }
+  clearSession(ctx);
 }
 
 export async function handleOnMessage(
@@ -248,17 +250,17 @@ export async function handleOnMessage(
     await ctx.deleteMessage(originId);
     await ctx.deleteMessage(replyId);
     session.metadata.edit = undefined;
-  }
-  await ctx.deleteMessage(message!.message_id);
-  await ctx.replyWithMarkdownV2(
-    `\`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``,
-    {
-      reply_to_message_id: session.root,
-      reply_markup: {
-        inline_keyboard: receiptInlineKeyboard,
+    await ctx.deleteMessage(message!.message_id);
+    await ctx.replyWithMarkdownV2(
+      `\`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``,
+      {
+        reply_to_message_id: session.root,
+        reply_markup: {
+          inline_keyboard: receiptInlineKeyboard,
+        },
       },
-    },
-  );
+    );
+  }
 }
 
 export async function handleOnPhoto(
