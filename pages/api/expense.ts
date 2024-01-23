@@ -95,7 +95,7 @@ export default withApiAuthRequired(async function handler(
       };
     } else if (req.method === "POST") {
       const { date, item, category, cost, card, person } = req.body;
-      data = addExpense(month, date, item, category, cost, card, person);
+      data = await addExpense(month, date, item, category, cost, card, person);
     }
     if (data) {
       return res.status(200).json(data);
