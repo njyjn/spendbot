@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { Telegraf, session, type Context } from "telegraf";
 import { Message, Update } from "@telegraf/types";
-import TelegrafContext from "telegraf/typings/context";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { message, callbackQuery } from "telegraf/filters";
-import { analyzeReceipt } from "../../utils/openai";
+import { analyzeReceipt, completeChat } from "../../utils/openai";
 import moment from "moment";
 import { addExpense } from "./expense";
 
@@ -260,6 +259,39 @@ export async function handleOnMessage(
         },
       },
     );
+  } else {
+    const response = await completeChat(
+      message.text,
+      session.metadata?.completions,
+    );
+    if (response) {
+      await ctx.reply(response, {
+        reply_to_message_id: message.message_id,
+      });
+      if (!session.metadata?.completions) {
+        const completions = [];
+        completions.push({
+          role: "system",
+          content: "You are a helpful assistant.",
+        });
+        if (session.metadata) {
+          session.metadata.completions = completions;
+        } else {
+          session.metadata = {
+            completions: completions,
+          };
+        }
+      } else {
+        if (session.metadata.completions.length > 9) {
+          session.metadata.completions.shift();
+          session.metadata.completions.shift();
+        }
+      }
+      session.metadata.completions.push({
+        role: "assistant",
+        content: response,
+      });
+    }
   }
 }
 

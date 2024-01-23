@@ -1,15 +1,40 @@
 import OpenAI from "openai";
+import { ChatCompletionMessageParam } from "openai/resources";
 
 const MAX_TOKENS = parseInt(process.env.OPENAI_MAX_TOKENS || "1000");
 const TEMPERATURE = parseInt(process.env.OPENAI_TEMPERATURE || "0");
 
 const ai = new OpenAI();
 
+export async function completeChat(
+  prompt: string,
+  history?: ChatCompletionMessageParam[],
+) {
+  let messages = history;
+  if (!messages) {
+    messages = [{ role: "system", content: "You are a helpful assistant." }];
+  }
+  messages.push({ role: "user", content: prompt });
+  console.debug(messages);
+  const response = await ai.chat.completions.create({
+    messages: messages,
+    model: "gpt-4",
+  });
+
+  console.debug(response);
+
+  return response.choices[0].message.content;
+}
+
 export async function analyzeReceipt(base64file: string) {
   try {
     const response = await ai.chat.completions.create({
       model: "gpt-4-vision-preview",
       messages: [
+        {
+          role: "system",
+          content: "Your task is to assist with the recording of expenses.",
+        },
         {
           role: "user",
           content: [
