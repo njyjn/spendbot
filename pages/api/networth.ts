@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import moment from "moment";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
-import { getService } from "../../utils/google";
-import currency from "currency.js";
+import { getService } from "../../lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID_NETWORTH;
 

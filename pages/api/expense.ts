@@ -1,9 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import moment from "moment";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
-import { getService } from "../../utils/google";
+import { getService } from "../../lib/google";
 import currency from "currency.js";
-import { sheets_v4 } from "googleapis";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const DEFAULT_RANGE_NOTATION = "!A1:G";

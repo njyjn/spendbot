@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getService } from "../../utils/google";
+import { getService } from "../../lib/google";
 import moment from "moment";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 

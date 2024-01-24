@@ -3,9 +3,10 @@ import { Telegraf, session, type Context } from "telegraf";
 import { Message, Update } from "@telegraf/types";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { message, callbackQuery } from "telegraf/filters";
-import { analyzeReceipt, completeChat } from "../../utils/openai";
+import { analyzeReceipt, completeChat } from "../../lib/openai";
 import moment from "moment";
 import { addExpense } from "./expense";
+import getDb from "@/lib/kysely";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const BASE_PATH = process.env.BASE_PATH || "";
@@ -71,6 +72,8 @@ const receiptInlineKeyboard: InlineKeyboardButton[][] = [
   ],
 ];
 
+const db = getDb();
+
 const bot = new Telegraf<ContextWithSession>(BOT_TOKEN, {
   telegram: {
     testEnv: process.env.NODE_ENV === "development",
@@ -86,9 +89,18 @@ bot.start(async (ctx) => {
 
 bot.use(async (ctx, next) => {
   // Security -- only authorized users can engage
-  console.info(`User ${ctx.from!.id} engaging...`);
-  if (ALLOWED_USERS.includes(ctx.from!.id.toString())) {
+  const user = await db
+    .selectFrom("users")
+    .select(["first_name", "telegram_id"])
+    .where("telegram_id", "=", ctx.from!.id.toString())
+    .executeTakeFirst();
+  if (user) {
+    console.info(
+      `Registered user ${user.first_name} (${user.telegram_id}) engaging...`,
+    );
     await next();
+  } else {
+    console.info(`User ${ctx.from!.id} attempted to engage`);
   }
 });
 

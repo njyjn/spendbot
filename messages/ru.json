@@ -63,6 +63,25 @@
     "formSubmit": "Добавить новую таблицу для {month}",
     "formSubmitLoading": "Отправка...",
     "formSubmitSuccess": "Успех!",
-    "formSubmitSuccessBack": "Назад"
+    "formSubmitSuccessBack": "Назад",
+    "users": "Пользователи",
+    "tableLoading": "Загрузка...",
+    "tableUsersHeaderColId": "ID",
+    "tableUsersHeaderColFirstName": "Имя",
+    "tableUsersHeaderColLastName": "Фамилия",
+    "tableUsersHeaderColFederationId": "ID Федерации",
+    "tableUsersHeaderColTelegramId": "ID в Telegram",
+    "tableUsersHeaderColActions": "Действия",
+    "tableUsersAdd": "Добавить нового пользователя",
+    "formUserHeader": "Добавить пользователя",
+    "formUserFirstName": "Имя",
+    "formUserLastName": "Фамилия",
+    "formUserTelegramId": "ID в Telegram",
+    "formUserFederationId": "ID Федерации",
+    "formClose": "Закрыть",
+    "formUserSubmit": "Отправить",
+    "tableUsersActionTooltipDelete": "Удалить пользователя",
+    "tableUsersActionTooltipEdit": "Редактировать пользователя",
+    "tableUsersActionTooltipSave": "Сохранить изменения"
   }
 }

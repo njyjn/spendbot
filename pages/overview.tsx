@@ -58,7 +58,7 @@ export async function getStaticProps({ locale }: GetStaticPropsContext) {
   };
 }
 
-export default withPageAuthRequired(function Summary() {
+export default withPageAuthRequired(function Overview() {
   const month = moment().format("MMM YY");
   const { data, error, isLoading } = useSWR(`/spend/api/networth`, fetcher);
   const t = useTranslations("Networth");

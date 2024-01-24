@@ -8,6 +8,9 @@ const nextConfig = {
     locales: ["en", "ru"],
     defaultLocale: "en",
   },
+  experimental: {
+    instrumentationHook: true,
+  },
 };
 
 module.exports = nextConfig;

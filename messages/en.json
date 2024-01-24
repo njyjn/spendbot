@@ -63,6 +63,25 @@
     "formSubmit": "Add new sheet for {month}",
     "formSubmitLoading": "Submitting...",
     "formSubmitSuccess": "Success!",
-    "formSubmitSuccessBack": "Back"
+    "formSubmitSuccessBack": "Back",
+    "users": "Users",
+    "tableLoading": "Loading...",
+    "tableUsersHeaderColId": "ID",
+    "tableUsersHeaderColFirstName": "First Name",
+    "tableUsersHeaderColLastName": "Last Name",
+    "tableUsersHeaderColFederationId": "Federation ID",
+    "tableUsersHeaderColTelegramId": "Telegram ID",
+    "tableUsersHeaderColActions": "Actions",
+    "tableUsersAdd": "Add new user",
+    "formUserHeader": "Add user",
+    "formUserFirstName": "First Name",
+    "formUserLastName": "Last Name",
+    "formUserTelegramId": "Telegram ID",
+    "formUserFederationId": "Federation ID",
+    "formClose": "Close",
+    "formUserSubmit": "Submit",
+    "tableUsersActionTooltipDelete": "Delete user",
+    "tableUsersActionTooltipEdit": "Edit user",
+    "tableUsersActionTooltipSave": "Save edits"
   }
 }
