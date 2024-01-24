@@ -64,6 +64,7 @@
     "formSubmitLoading": "Отправка...",
     "formSubmitSuccess": "Успех!",
     "formSubmitSuccessBack": "Назад",
+    "controls": "Панель управления",
     "users": "Пользователи",
     "tableLoading": "Загрузка...",
     "tableUsersHeaderColId": "ID",

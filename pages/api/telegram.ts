@@ -10,7 +10,6 @@ import getDb from "@/lib/kysely";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const BASE_PATH = process.env.BASE_PATH || "";
-const ALLOWED_USERS = process.env.TELEGRAM_ALLOWED_USERS?.split(",") || [];
 
 interface ContextWithSession<U extends Update = Update> extends Context<U> {
   session: {

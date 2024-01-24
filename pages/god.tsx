@@ -206,39 +206,38 @@ export default withPageAuthRequired(function God() {
             </ModalFooter>
           </ModalContent>
         </Modal>
-        <h1 className="text-center">🌈 {t("title")}</h1>
         <Row className="g-4">
+          <h1 className="text-center">🌈 {t("title")}</h1>
           <Col sm={12}>
-            <Card>
-              <CardBody>
-                <Button
-                  className="mt-3"
-                  style={{ width: "100%" }}
-                  color="danger"
-                  disabled={isLoading}
-                  onClick={async () => {
-                    setIsLoading(true);
-                    const response = await fetch(
-                      `/spend/api/clone?month=${month}`,
-                    );
-                    if ((await response.json()).ok) {
-                      setIsSuccess(true);
-                    }
-                    setIsLoading(false);
-                  }}
-                >
-                  {isLoading
-                    ? t("formSubmitLoading")
-                    : `🆕 ${t("formSubmit", {
-                        month: month,
-                      })}`}
-                </Button>
-              </CardBody>
-            </Card>
+            <h4 className="text-center">{t("controls")}</h4>
+            <Button
+              className="mt-3"
+              style={{ width: "100%" }}
+              color="danger"
+              disabled={isLoading}
+              onPress={async () => {
+                setIsLoading(true);
+                const response = await fetch(`/spend/api/clone?month=${month}`);
+                if ((await response.json()).ok) {
+                  setIsSuccess(true);
+                }
+                setIsLoading(false);
+              }}
+            >
+              {isLoading
+                ? t("formSubmitLoading")
+                : `🆕 ${t("formSubmit", {
+                    month: month,
+                  })}`}
+            </Button>
           </Col>
           <Col sm={12}>
-            <h4>{t("users")}</h4>
+            <Divider />
+          </Col>
+          <h4>{t("users")}</h4>
+          <Col sm={12}>
             <div className="flex justify-between gap-3 items-end mb-3">
+              <p>Total: {usersIsLoading ? t("tableLoading") : users.length}</p>
               <div className="flex gap-3">
                 <Button
                   color="primary"

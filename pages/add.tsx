@@ -10,7 +10,7 @@ import {
   InputGroup,
   Modal,
 } from "react-bootstrap";
-import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
+import { useUser, withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
 import { Expense } from "./api/expense";
 import { useTranslations } from "next-intl";
@@ -31,6 +31,7 @@ export async function getStaticProps({ locale }: GetStaticPropsContext) {
 
 export default withPageAuthRequired(function Expense() {
   const router = useRouter();
+  const user = useUser();
   const t = useTranslations("Add");
 
   const [isLoading, setIsLoading] = useState(false);
@@ -201,7 +202,11 @@ export default withPageAuthRequired(function Expense() {
                 <option value={undefined}>{t("formSelectPerson")}</option>
                 {definitions["persons"].map((e: string) => {
                   return (
-                    <option key={"Person." + e} value={e}>
+                    <option
+                      key={"Person." + e}
+                      value={e}
+                      selected={user.user?.name === e}
+                    >
                       {e}
                     </option>
                   );
