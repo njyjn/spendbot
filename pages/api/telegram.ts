@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { Telegraf, session, type Context } from "telegraf";
+import { escapers } from "@telegraf/entity";
 import { Message, Update } from "@telegraf/types";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { message, callbackQuery } from "telegraf/filters";
@@ -122,7 +123,7 @@ bot.command("expense", async (ctx) => {
       category,
       payment_method,
     };
-    await ctx.reply(`\`\`\`json\n${contents}\n\`\`\``, {
+    await ctx.reply(escapers.MarkdownV2(`\`\`\`json\n${contents}\n\`\`\``), {
       parse_mode: "MarkdownV2",
       reply_markup: {
         inline_keyboard: receiptInlineKeyboard,
@@ -196,7 +197,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
       case "cancel":
         console.info("Clearing session...");
         clearSession(ctx);
-        await ctx.editMessageText(reply, {
+        await ctx.editMessageText(escapers.MarkdownV2(reply), {
           parse_mode: "MarkdownV2",
           reply_markup: undefined,
         });
@@ -262,7 +263,9 @@ export async function handleOnMessage(
     session.metadata.edit = undefined;
     await ctx.deleteMessage(message!.message_id);
     await ctx.replyWithMarkdownV2(
-      `\`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``,
+      escapers.MarkdownV2(
+        `\`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``,
+      ),
       {
         reply_to_message_id: session.root,
         reply_markup: {
@@ -379,7 +382,7 @@ export async function handleOnPhoto(
   }
 
   await ctx.deleteMessage(loadingMessageId);
-  await ctx.reply(reply, {
+  await ctx.reply(escapers.MarkdownV2(reply), {
     parse_mode: "MarkdownV2",
     reply_markup: {
       inline_keyboard: hideInlineKeyboardMarkup ? [] : receiptInlineKeyboard,

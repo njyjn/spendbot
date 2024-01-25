@@ -13,6 +13,7 @@
     "@auth0/nextjs-auth0": "3.5.0",
     "@google-cloud/local-auth": "3.0.1",
     "@nextui-org/react": "2.2.9",
+    "@telegraf/entity": "0.4.0",
     "@types/node": "20.11.5",
     "@types/react": "18.0.38",
     "@types/react-dom": "18.0.11",
