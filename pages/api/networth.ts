@@ -59,7 +59,6 @@ export default withApiAuthRequired(async function handler(
     }
 
     if (data) {
-      console.log(data);
       return res.status(200).json(data);
     }
     return res.status(400).json({ error: "Bad request" });

@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Button } from "@nextui-org/react";
 
-const ThemeSwitcher = (props: { variant: "bordered" | "flat" }) => {
+const ThemeSwitcher = (props: { variant: "bordered" | "flat" | "faded" }) => {
   const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, systemTheme } = useTheme();
 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
@@ -15,15 +15,25 @@ const ThemeSwitcher = (props: { variant: "bordered" | "flat" }) => {
     return null;
   }
 
+  function toggle() {
+    const currentTheme = theme || systemTheme || "light";
+    setTheme(currentTheme === "dark" ? "light" : "dark");
+  }
+
+  function symbol() {
+    const selectedTheme = theme || systemTheme || "light";
+    return selectedTheme === "dark" ? "🌞" : "🌚";
+  }
+
   return (
     <Button
       variant={props.variant}
       size="sm"
       onClick={() => {
-        setTheme(theme === "light" ? "dark" : "light");
+        toggle();
       }}
     >
-      {theme === "light" ? "🌚" : "🌞"}
+      {symbol()}
     </Button>
   );
 };

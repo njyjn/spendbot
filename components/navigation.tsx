@@ -2,12 +2,10 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import { useTheme } from "next-themes";
 import {
   Avatar,
   Button,
   ButtonGroup,
-  Divider,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -25,7 +23,6 @@ import ThemeSwitcher from "./themeSwitcher";
 
 export default function Navigation() {
   const { user, error, isLoading } = useUser();
-  const { theme, setTheme } = useTheme();
   const { locale, locales, route } = useRouter();
 
   const otherLocale = locales?.find((cur) => cur !== locale);
@@ -125,17 +122,23 @@ export default function Navigation() {
           </Dropdown>
         ) : (
           <NavbarItem>
-            <Link href="/api/auth/login" locale={locale}>
+            <Button
+              as={Link}
+              href="/api/auth/login"
+              locale={locale}
+              radius="full"
+              color="secondary"
+            >
               {t("login")}
-            </Link>
+            </Button>
           </NavbarItem>
         )}
       </NavbarContent>
       <NavbarMenu>
         <NavbarMenuItem key="locale">
-          <ButtonGroup>
+          <ButtonGroup className="my-3" fullWidth radius="full">
             <Button
-              variant="bordered"
+              variant="flat"
               size="sm"
               as={Link}
               href={route}
@@ -143,49 +146,55 @@ export default function Navigation() {
             >
               {t("locale", { locale: otherLocale })}
             </Button>
-            <ThemeSwitcher variant="bordered" />
+            <ThemeSwitcher variant="flat" />
           </ButtonGroup>
         </NavbarMenuItem>
-        <NavbarMenuItem key="overview" isActive={route === "/overview"}>
-          <Link
-            className="w-full"
-            href="/overview"
-            locale={locale}
-            color="foreground"
-          >
-            💰 {t("networth")}
-          </Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem key="summary" isActive={route === "/summary"}>
-          <Link
-            className="w-full"
-            href="/summary"
-            locale={locale}
-            color="foreground"
-          >
-            📊 {t("summary")}
-          </Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem key="add" isActive={route === "/add"}>
-          <Link
-            className="w-full"
-            href="/add"
-            locale={locale}
-            color="foreground"
-          >
-            🧮 {t("add")}
-          </Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem key="god" isActive={route === "/god"}>
-          <Link
-            className="w-full"
-            href="/god"
-            locale={locale}
-            color="foreground"
-          >
-            🌈 {t("god")}
-          </Link>
-        </NavbarMenuItem>
+        {user ? (
+          <>
+            <NavbarMenuItem key="overview" isActive={route === "/overview"}>
+              <Link
+                className="w-full"
+                href="/overview"
+                locale={locale}
+                color="foreground"
+              >
+                💰 {t("networth")}
+              </Link>
+            </NavbarMenuItem>
+            <NavbarMenuItem key="summary" isActive={route === "/summary"}>
+              <Link
+                className="w-full"
+                href="/summary"
+                locale={locale}
+                color="foreground"
+              >
+                📊 {t("summary")}
+              </Link>
+            </NavbarMenuItem>
+            <NavbarMenuItem key="add" isActive={route === "/add"}>
+              <Link
+                className="w-full"
+                href="/add"
+                locale={locale}
+                color="foreground"
+              >
+                🧮 {t("add")}
+              </Link>
+            </NavbarMenuItem>
+            <NavbarMenuItem key="god" isActive={route === "/god"}>
+              <Link
+                className="w-full"
+                href="/god"
+                locale={locale}
+                color="foreground"
+              >
+                🌈 {t("god")}
+              </Link>
+            </NavbarMenuItem>
+          </>
+        ) : (
+          <></>
+        )}
       </NavbarMenu>
     </Navbar>
   );

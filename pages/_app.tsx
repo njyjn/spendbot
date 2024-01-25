@@ -21,7 +21,7 @@ export default function App({ Component, pageProps }: AppProps) {
         messages={pageProps.messages}
       >
         <NextUIProvider navigate={router.push}>
-          <NextThemesProvider attribute="class" defaultTheme="dark">
+          <NextThemesProvider attribute="class" enableSystem>
             <Component {...pageProps} />
           </NextThemesProvider>
         </NextUIProvider>
