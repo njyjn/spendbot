@@ -123,7 +123,7 @@ bot.command("expense", async (ctx) => {
       category,
       payment_method,
     };
-    await ctx.reply(escapers.MarkdownV2(`\`\`\`json\n${contents}\n\`\`\``), {
+    await ctx.reply(escapers.MarkdownV2(`<pre language="json">${contents}</pre>`), {
       parse_mode: "MarkdownV2",
       reply_markup: {
         inline_keyboard: receiptInlineKeyboard,
@@ -264,7 +264,7 @@ export async function handleOnMessage(
     await ctx.deleteMessage(message!.message_id);
     await ctx.replyWithMarkdownV2(
       escapers.MarkdownV2(
-        `\`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``,
+        `<pre language="json">${JSON.stringify(session.metadata)}</pre>`,
       ),
       {
         reply_to_message_id: session.root,
