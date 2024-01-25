@@ -146,6 +146,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
   const { callbackQuery, session } = ctx;
   const messageId = callbackQuery.message?.message_id;
   if (session.metadata) {
+    await ctx.sendChatAction("typing");
     let reply = "Request cancelled";
     switch (callbackQuery.data) {
       case "date":
@@ -317,6 +318,8 @@ export async function handleOnPhoto(
 ) {
   const { message, session } = ctx;
 
+  await ctx.sendChatAction("typing");
+
   session.count = 1;
   session.type = "receipt";
 
@@ -326,13 +329,12 @@ export async function handleOnPhoto(
 
   const photo = message.photo.pop();
   const fileLink = await ctx.telegram.getFileLink(photo!.file_id);
-
   console.info(`Photo received with ID ${photo!.file_id}`);
-
   // Download photo as base64 file
   const file = await fetch(fileLink);
   const base64file = Buffer.from(await file.arrayBuffer()).toString("base64");
 
+  await ctx.sendChatAction("typing");
   // Pass file to GPT for analysis
   const {
     ok,
