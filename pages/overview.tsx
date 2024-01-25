@@ -1,4 +1,7 @@
-import { Card, Col, Container, Row } from "react-bootstrap";
+import { title } from "@/components/primitives";
+import DefaultLayout from "@/layouts/default";
+import { GetStaticPropsContext } from "next";
+import { useTranslations } from "next-intl";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import useSWR from "swr";
 import moment from "moment";
@@ -13,9 +16,8 @@ import {
   BarElement,
   Title,
 } from "chart.js";
+import { Card, CardBody, Divider } from "@nextui-org/react";
 import { Allocation, Goal } from "./api/networth";
-import { GetStaticPropsContext } from "next";
-import { useTranslations } from "next-intl";
 
 Chart.register(
   ArcElement,
@@ -63,144 +65,138 @@ export default withPageAuthRequired(function Overview() {
   const { data, error, isLoading } = useSWR(`/spend/api/networth`, fetcher);
   const t = useTranslations("Networth");
   return (
-    <>
-      <Container fluid className="text-center center">
-        <h1>💰 {t("title")}</h1>
+    <DefaultLayout>
+      <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
+        <div className="inline-block max-w-lg text-center justify-center pb-4">
+          <h1 className={title()}>💰 {t("title")}</h1>
+        </div>
+        <div className="text-center justify-center">
+          {!isLoading && data ? (
+            <>
+              <p>
+                {t("context", {
+                  month: month,
+                })}
+              </p>
+              <h1
+                className={title({
+                  size: "sm",
+                })}
+              >
+                {data.total}
+              </h1>
+            </>
+          ) : (
+            <p>{t("loading")}</p>
+          )}
+        </div>
+        <Divider />
         {!isLoading && data ? (
-          <>
-            <Row className="g-4">
-              <Col sm={12}>
-                <Card>
-                  <Card.Body>
-                    <p>
-                      {t("context", {
-                        month: month,
-                      })}
-                    </p>
-                    <h2>{data.total}</h2>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm={6}>
-                <Card>
-                  <Card.Body>
-                    <div style={{ display: "block", height: "25vh" }}>
-                      <Doughnut
-                        options={{
-                          plugins: {
-                            legend: {
-                              position: "bottom",
-                            },
-                          },
-                          maintainAspectRatio: false,
-                        }}
-                        data={{
-                          labels: data.allocations.map(
-                            (a: Allocation) => a.allocation,
+          <div className="max-w-[900px] gap-2 grid grid-cols-12 grid-rows-2">
+            <Card className="col-span-6 sm:col-span-6">
+              <CardBody>
+                <div style={{ display: "block", height: "40vh" }}>
+                  <Doughnut
+                    options={{
+                      plugins: {
+                        legend: {
+                          position: "bottom",
+                        },
+                      },
+                      maintainAspectRatio: false,
+                    }}
+                    data={{
+                      labels: data.allocations.map(
+                        (a: Allocation) => a.allocation,
+                      ),
+                      datasets: [
+                        {
+                          data: data.allocations.map(
+                            (a: Allocation) => a.absolute,
                           ),
-                          datasets: [
-                            {
-                              data: data.allocations.map(
-                                (a: Allocation) => a.absolute * 100,
-                              ),
-                              backgroundColor: data.allocations.map(
-                                (_a: any) => {
-                                  return random_rgba();
-                                },
-                              ),
-                            },
-                          ],
-                        }}
-                      />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm={6}>
-                <Card>
-                  <Card.Body>
-                    <div style={{ display: "block", height: "25vh" }}>
-                      <Doughnut
-                        options={{
-                          plugins: {
-                            legend: {
-                              position: "bottom",
-                            },
-                          },
-                          maintainAspectRatio: false,
-                        }}
-                        data={{
-                          labels: data.allocations
-                            .filter((a: Allocation) => {
-                              return !!a.relative;
-                            })
-                            .map((a: Allocation) => a.allocation),
-                          datasets: [
-                            {
-                              data: data.allocations.map(
-                                (a: Allocation) => a.relative * 100,
-                              ),
-                              backgroundColor: data.allocations.map(
-                                (_a: any) => {
-                                  return random_rgba();
-                                },
-                              ),
-                            },
-                          ],
-                        }}
-                      />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm={12}>
-                <Card>
-                  <Card.Body>
-                    <div style={{ display: "block", height: "25vh" }}>
-                      <Bar
-                        options={{
-                          maintainAspectRatio: false,
-                          indexAxis: "y",
-                          scales: {
-                            y: {
-                              ticks: {
-                                mirror: true,
-                              },
-                            },
-                          },
-                        }}
-                        data={{
-                          labels: data.goals.map(
-                            (g: Goal) => `${g.goal} (${g.value} / ${g.end})`,
+                          backgroundColor: data.allocations.map((_a: any) => {
+                            return random_rgba();
+                          }),
+                        },
+                      ],
+                    }}
+                  />
+                </div>
+              </CardBody>
+            </Card>
+            <Card className="col-span-6 sm:col-span-6">
+              <CardBody>
+                <div style={{ display: "block", height: "40vh" }}>
+                  <Doughnut
+                    options={{
+                      plugins: {
+                        legend: {
+                          position: "bottom",
+                        },
+                      },
+                      maintainAspectRatio: false,
+                    }}
+                    data={{
+                      labels: data.allocations
+                        .filter((a: Allocation) => {
+                          return !!a.relative;
+                        })
+                        .map((a: Allocation) => a.allocation),
+                      datasets: [
+                        {
+                          data: data.allocations.map(
+                            (a: Allocation) => a.relative * 100,
                           ),
-                          datasets: [
-                            {
-                              label: "Goals",
-                              data: data.goals.map(
-                                (g: Goal) => g.percent * 100,
-                              ),
-                              backgroundColor: data.goals.map((g: Goal) => {
-                                if (g.percent >= 1)
-                                  return "rgba(39,245,52,0.5)";
-                                if (g.percent >= 0.5)
-                                  return "rgba(245,232,39,0.5)";
-                                if (g.percent >= 0)
-                                  return "rgba(245,39,39,0.5)";
-                              }),
-                            },
-                          ],
-                        }}
-                      />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </>
+                          backgroundColor: data.allocations.map((_a: any) => {
+                            return random_rgba();
+                          }),
+                        },
+                      ],
+                    }}
+                  />
+                </div>
+              </CardBody>
+            </Card>
+            <Card className="col-span-12 sm:col-span-12">
+              <CardBody>
+                <div style={{ display: "block", height: "40vh" }}>
+                  <Bar
+                    options={{
+                      maintainAspectRatio: false,
+                      indexAxis: "y",
+                      scales: {
+                        y: {
+                          ticks: {
+                            mirror: true,
+                          },
+                        },
+                      },
+                    }}
+                    data={{
+                      labels: data.goals.map(
+                        (g: Goal) => `${g.goal} (${g.value} / ${g.end})`,
+                      ),
+                      datasets: [
+                        {
+                          label: "Goals",
+                          data: data.goals.map((g: Goal) => g.percent * 100),
+                          backgroundColor: data.goals.map((g: Goal) => {
+                            if (g.percent >= 1) return "rgba(39,245,52,0.5)";
+                            if (g.percent >= 0.5) return "rgba(245,232,39,0.5)";
+                            if (g.percent >= 0) return "rgba(245,39,39,0.5)";
+                          }),
+                        },
+                      ],
+                    }}
+                  />
+                </div>
+              </CardBody>
+            </Card>
+          </div>
         ) : (
           t("loading")
         )}
-      </Container>
-    </>
+      </section>
+    </DefaultLayout>
   );
 });

@@ -1,69 +1,192 @@
-import { Container, Nav, NavDropdown, Navbar } from "react-bootstrap";
-import { useUser } from "@auth0/nextjs-auth0/client";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/router";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { useTranslations } from "next-intl";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { useTheme } from "next-themes";
+import {
+  Avatar,
+  Button,
+  ButtonGroup,
+  Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  NavbarMenu,
+  NavbarMenuItem,
+  NavbarMenuToggle,
+} from "@nextui-org/react";
+import { useState } from "react";
+import ThemeSwitcher from "./themeSwitcher";
 
 export default function Navigation() {
   const { user, error, isLoading } = useUser();
+  const { theme, setTheme } = useTheme();
   const { locale, locales, route } = useRouter();
+
   const otherLocale = locales?.find((cur) => cur !== locale);
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const t = useTranslations("Navigation");
 
   return (
-    <Navbar collapseOnSelect expand="md">
-      <Container fluid>
-        <Link href="/" locale={locale} className="navbar-brand">
-          💸 SpendBot
-        </Link>
-        <Navbar.Toggle aria-controls="responsive-navbar-nav"></Navbar.Toggle>
-        <Navbar.Collapse id="responsive-navbar-nav">
-          <Nav className="me-auto">
-            <Link href="/overview" locale={locale} className="nav-link">
-              💰 {t("networth")}
+    <Navbar onMenuOpenChange={setIsMenuOpen} position="sticky" isBordered>
+      <NavbarContent className="sm:hidden" justify="start">
+        <NavbarMenuToggle
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          className="sm:hidden"
+        />
+      </NavbarContent>
+      <NavbarContent className="sm:hidden pr-3" justify="center">
+        <NavbarBrand>
+          <Link href="/" locale={locale}>
+            💸 SpendBot
+          </Link>
+        </NavbarBrand>
+      </NavbarContent>
+      <NavbarContent className="hidden sm:flex gap-4" justify="center">
+        <NavbarBrand>
+          <Link href="/" locale={locale}>
+            💸 SpendBot
+          </Link>
+        </NavbarBrand>
+      </NavbarContent>
+      {user ? (
+        <NavbarContent className="hidden sm:flex gap-4" justify="center">
+          <NavbarItem isActive={route === "/overview"}>
+            <Link href="/overview" locale={locale} color="foreground">
+              {t("networth")}
             </Link>
-            <Link href="/summary" locale={locale} className="nav-link">
-              📊 {t("summary")}
+          </NavbarItem>
+          <NavbarItem isActive={route === "/summary"}>
+            <Link href="/summary" locale={locale} color="foreground">
+              {t("summary")}
             </Link>
-            <Link href="/add" locale={locale} className="nav-link">
-              🧮 {t("add")}
+          </NavbarItem>
+          <NavbarItem isActive={route === "/add"}>
+            <Link href="/add" locale={locale} color="foreground">
+              {t("add")}
             </Link>
-            <Link href="/god" locale={locale} className="nav-link">
-              🌈 {t("god")}
+          </NavbarItem>
+          <NavbarItem isActive={route === "/god"}>
+            <Link href="/god" locale={locale} color="foreground">
+              {t("god")}
             </Link>
-          </Nav>
-          <Nav>
-            {user ? (
-              <NavDropdown
-                title={`👋 ${t("hello")}, ${user.name}!`}
-                id="collapsible-nav-dropdown"
-              >
-                <NavDropdown.Item>
-                  <Link
-                    href="/api/auth/logout"
-                    locale={locale}
-                    className="nav-link"
-                  >
-                    🌚 {t("logout")}
-                  </Link>
-                </NavDropdown.Item>
-              </NavDropdown>
-            ) : (
-              <Link
-                href="/api/auth/login"
-                locale={locale}
-                className={"nav-link"}
-              >
-                🌞 {t("login")}
-              </Link>
-            )}
-            <Link href={route} locale={otherLocale} className="nav-link">
+          </NavbarItem>
+        </NavbarContent>
+      ) : (
+        <></>
+      )}
+      <NavbarContent justify="end">
+        <NavbarItem className="hidden sm:flex gap-4">
+          <ButtonGroup>
+            <Button
+              size="sm"
+              variant="flat"
+              as={Link}
+              href={route}
+              locale={otherLocale}
+            >
               {t("locale", { locale: otherLocale })}
+            </Button>
+            <ThemeSwitcher variant="flat" />
+          </ButtonGroup>
+        </NavbarItem>
+        {user ? (
+          <Dropdown placement="bottom-end">
+            <DropdownTrigger>
+              <Avatar
+                isBordered
+                as="button"
+                className="transition-transform"
+                color="secondary"
+                name={user.name || undefined}
+                size="sm"
+                src={user.picture || undefined}
+              ></Avatar>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="profile-actions" variant="flat">
+              <DropdownItem key="profile" className="h-14 gap-2">
+                <p className="font-semibold">
+                  {t("hello")}, {user.name}
+                </p>
+              </DropdownItem>
+              <DropdownItem key="logout" color="danger">
+                <Link href="/api/auth/logout" locale={locale}>
+                  {t("logout")}
+                </Link>
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        ) : (
+          <NavbarItem>
+            <Link href="/api/auth/login" locale={locale}>
+              {t("login")}
             </Link>
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
+          </NavbarItem>
+        )}
+      </NavbarContent>
+      <NavbarMenu>
+        <NavbarMenuItem key="locale">
+          <ButtonGroup>
+            <Button
+              variant="bordered"
+              size="sm"
+              as={Link}
+              href={route}
+              locale={otherLocale}
+            >
+              {t("locale", { locale: otherLocale })}
+            </Button>
+            <ThemeSwitcher variant="bordered" />
+          </ButtonGroup>
+        </NavbarMenuItem>
+        <NavbarMenuItem key="overview" isActive={route === "/overview"}>
+          <Link
+            className="w-full"
+            href="/overview"
+            locale={locale}
+            color="foreground"
+          >
+            💰 {t("networth")}
+          </Link>
+        </NavbarMenuItem>
+        <NavbarMenuItem key="summary" isActive={route === "/summary"}>
+          <Link
+            className="w-full"
+            href="/summary"
+            locale={locale}
+            color="foreground"
+          >
+            📊 {t("summary")}
+          </Link>
+        </NavbarMenuItem>
+        <NavbarMenuItem key="add" isActive={route === "/add"}>
+          <Link
+            className="w-full"
+            href="/add"
+            locale={locale}
+            color="foreground"
+          >
+            🧮 {t("add")}
+          </Link>
+        </NavbarMenuItem>
+        <NavbarMenuItem key="god" isActive={route === "/god"}>
+          <Link
+            className="w-full"
+            href="/god"
+            locale={locale}
+            color="foreground"
+          >
+            🌈 {t("god")}
+          </Link>
+        </NavbarMenuItem>
+      </NavbarMenu>
     </Navbar>
   );
 }

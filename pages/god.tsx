@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { Col, Container, Form, Row } from "react-bootstrap";
+import Image from "next/image";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
 import { useTranslations } from "next-intl";
@@ -8,10 +8,6 @@ import { GetStaticPropsContext } from "next";
 import useSWR from "swr";
 import {
   Button,
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
   Modal,
   ModalContent,
   ModalBody,
@@ -29,14 +25,11 @@ import {
   Input,
   Spinner,
 } from "@nextui-org/react";
-import {
-  EyeIcon,
-  EditIcon,
-  DeleteIcon,
-  PlusIcon,
-  SaveIcon,
-} from "../components/icons";
+import { EditIcon, DeleteIcon, PlusIcon, SaveIcon } from "../components/icons";
 import TableCellEditable from "@/components/table/cellEditable";
+import DefaultLayout from "@/layouts/default";
+import { subtitle, title } from "@/components/primitives";
+import homePic from "@/public/images/giphy.gif";
 
 async function fetcher(uri: string) {
   const response = await fetch(uri);
@@ -115,8 +108,8 @@ export default withPageAuthRequired(function God() {
   };
 
   return (
-    <>
-      <Container fluid className="text-center center">
+    <DefaultLayout>
+      <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
         <Modal
           placement="center"
           isOpen={isUserOpen}
@@ -124,7 +117,7 @@ export default withPageAuthRequired(function God() {
         >
           <ModalContent>
             {(onUserClose) => (
-              <Form
+              <form
                 onSubmit={async (event) => {
                   event.preventDefault();
                   setIsLoading(true);
@@ -186,7 +179,7 @@ export default withPageAuthRequired(function God() {
                     {t("formUserSubmit")}
                   </Button>
                 </ModalFooter>
-              </Form>
+              </form>
             )}
           </ModalContent>
         </Modal>
@@ -206,13 +199,15 @@ export default withPageAuthRequired(function God() {
             </ModalFooter>
           </ModalContent>
         </Modal>
-        <Row className="g-4">
-          <h1 className="text-center">🌈 {t("title")}</h1>
-          <Col sm={12}>
-            <h4 className="text-center">{t("controls")}</h4>
+        <div className="inline-block max-w-lg text-center justify-center">
+          <h1 className={title()}>🌈 {t("title")}</h1>
+        </div>
+        <Image className="py-4 mx-auto" src={homePic} alt="money where"></Image>
+        <div className="gap-1 grid grid-rows-2">
+          <div className="row-span-12">
+            <h4 className={subtitle()}>{t("controls")}</h4>
             <Button
-              className="mt-3"
-              style={{ width: "100%" }}
+              fullWidth
               color="danger"
               disabled={isLoading}
               onPress={async () => {
@@ -230,25 +225,26 @@ export default withPageAuthRequired(function God() {
                     month: month,
                   })}`}
             </Button>
-          </Col>
-          <Col sm={12}>
-            <Divider />
-          </Col>
-          <h4>{t("users")}</h4>
-          <Col sm={12}>
-            <div className="flex justify-between gap-3 items-end mb-3">
-              <p>Total: {usersIsLoading ? t("tableLoading") : users.length}</p>
-              <div className="flex gap-3">
-                <Button
-                  color="primary"
-                  endContent={<PlusIcon />}
-                  onPress={onUserOpen}
-                >
-                  {t("tableUsersAdd")}
-                </Button>
-              </div>
+          </div>
+          <div className="row-span-12"></div>
+          <h4 className={subtitle()}>{t("users")}</h4>
+          <div className="flex justify-between gap-3 items-end mb-3">
+            <p>Total: {usersIsLoading ? t("tableLoading") : users.length}</p>
+            <div className="flex gap-3">
+              <Button
+                color="primary"
+                endContent={<PlusIcon />}
+                onPress={onUserOpen}
+              >
+                {t("tableUsersAdd")}
+              </Button>
             </div>
-            <Table>
+          </div>
+          <div className="max-w-[900px] gap-2 grid grid-cols-12 grid-rows-1">
+            <Table
+              className="col-span-12 sm:col-span-12"
+              aria-label="users-table"
+            >
               <TableHeader>
                 <TableColumn>{t("tableUsersHeaderColActions")}</TableColumn>
                 <TableColumn>{t("tableUsersHeaderColId")}</TableColumn>
@@ -348,9 +344,10 @@ export default withPageAuthRequired(function God() {
                 })}
               </TableBody>
             </Table>
-          </Col>
-        </Row>
-      </Container>
-    </>
+            <Divider />
+          </div>
+        </div>
+      </section>
+    </DefaultLayout>
   );
 });

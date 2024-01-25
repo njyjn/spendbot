@@ -1,15 +1,28 @@
-import {
-  Card,
-  Col,
-  Container,
-  Dropdown,
-  DropdownButton,
-  Row,
-  Table,
-} from "react-bootstrap";
-import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
+import { useState } from "react";
+import DefaultLayout from "@/layouts/default";
+import { title, subtitle } from "@/components/primitives";
+
+import { GetStaticPropsContext } from "next";
+import { useTranslations } from "next-intl";
 import useSWR from "swr";
 import moment from "moment";
+
+import {
+  Card,
+  CardBody,
+  Divider,
+  Select,
+  SelectItem,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from "@nextui-org/react";
+
+import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import {
   Chart,
@@ -23,11 +36,8 @@ import {
   PointElement,
   LineElement,
 } from "chart.js";
-import { Expense } from "./api/expense";
-import { useState } from "react";
 import currency from "currency.js";
-import { GetStaticPropsContext } from "next";
-import { useTranslations } from "next-intl";
+import { Expense } from "./api/expense";
 
 Chart.register(
   ArcElement,
@@ -191,196 +201,193 @@ export default withPageAuthRequired(function Summary() {
   } = getExpenseChartData(expenseData);
 
   return (
-    <>
-      <Container fluid className="text-center center">
-        <h1>📊 {t("title")}</h1>
-        <Row className="g-4">
-          <Col sm={12}>
-            <Card>
-              <Card.Body>
-                <p>
-                  {t("contextUpper")}{" "}
-                  <DropdownButton
-                    id="dropdown-month-selector"
-                    title={month}
-                    variant="light"
-                    disabled={expenseIsLoading}
-                    onSelect={(e) => {
-                      if (e) {
-                        setMonth(e);
-                      }
-                    }}
-                  >
-                    {!monthsIsLoading && monthsData && monthsData["months"] ? (
-                      monthsData["months"].map((m: string) => (
-                        <Dropdown.Item key={m} eventKey={m}>
-                          {m}
-                        </Dropdown.Item>
-                      ))
-                    ) : (
-                      <></>
-                    )}
-                  </DropdownButton>{" "}
-                  {t("contextLower")}
-                </p>
-                <p></p>
-                {!expenseIsLoading && expenseData ? (
-                  <>
-                    <h2>{expenseData.total}</h2>
-                    <p>
-                      {getLastMonthTotalDelta(expenseData)}
-                      <br />
-                      {t("contextSince")}
-                    </p>
-                  </>
-                ) : (
-                  <h2>{t("loading")}...</h2>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
+    <DefaultLayout>
+      <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
+        <div className="inline-block max-w-lg text-center justify-center pb-4">
+          <h1 className={title()}>📊 {t("title")}</h1>
+        </div>
+        <div className="text-center justify-center">
+          <p>{t("contextUpper")}</p>
+          <Select
+            aria-label="month-selector"
+            size="sm"
+            className="max-w-xs"
+            items={
+              monthsIsLoading
+                ? [{ value: month, label: month }]
+                : monthsData["months"].map((m: string) => {
+                    return { value: m, label: m };
+                  })
+            }
+            disabled={monthsIsLoading && expenseIsLoading}
+            selectedKeys={[month]}
+            onChange={(event) => {
+              setMonth(event.target.value);
+            }}
+          >
+            {(month: { value: string; label: string }) => {
+              return <SelectItem key={month.value}>{month.label}</SelectItem>;
+            }}
+          </Select>
+          <p>{t("contextLower")}</p>
           {!expenseIsLoading && expenseData ? (
             <>
-              <Col sm={12}>
-                <Card>
-                  <Card.Body>
-                    <div style={{ display: "block", height: "25vh" }}>
-                      <Line
-                        options={{ maintainAspectRatio: false }}
-                        data={{
-                          labels: expensesByMonth.map((e) => e.month),
-                          datasets: [
-                            {
-                              label: "Total",
-                              data: expensesByMonth.map((e) => e.sum),
-                              borderColor: random_rgba(),
-                              fill: false,
-                              tension: 0.1,
-                            },
-                          ],
-                        }}
-                      />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm={12}>
-                <Card>
-                  <Card.Body>
-                    <div style={{ display: "block", height: "25vh" }}>
-                      <Bar
-                        options={{ maintainAspectRatio: false }}
-                        data={{
-                          labels: expensesByCard.map((e) => e.card),
-                          datasets: [
-                            {
-                              label: "Cards",
-                              data: expensesByCard.map((e) => e.sum),
-                              backgroundColor: random_rgba(),
-                            },
-                          ],
-                        }}
-                      />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm={6}>
-                <Card>
-                  <Card.Body>
-                    <div style={{ display: "block", height: "25vh" }}>
-                      <Doughnut
-                        options={{
-                          plugins: {
-                            legend: {
-                              position: "bottom",
-                            },
-                          },
-                          maintainAspectRatio: false,
-                        }}
-                        data={{
-                          labels: expensesByCategory.map((e) => e.category),
-                          datasets: [
-                            {
-                              data: expensesByCategory.map((e) => e.sum),
-                              backgroundColor: expensesByCategory.map((_e) => {
-                                return random_rgba();
-                              }),
-                            },
-                          ],
-                        }}
-                      />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm={6}>
-                <Card>
-                  <Card.Body>
-                    <div style={{ display: "block", height: "25vh" }}>
-                      <Doughnut
-                        options={{
-                          plugins: {
-                            legend: {
-                              position: "bottom",
-                            },
-                          },
-                          maintainAspectRatio: false,
-                        }}
-                        data={{
-                          labels: expensesByPerson.map((e) => e.person),
-                          datasets: [
-                            {
-                              data: expensesByPerson.map((e) => e.sum),
-                              backgroundColor: expensesByPerson.map((_e) => {
-                                return random_rgba();
-                              }),
-                            },
-                          ],
-                        }}
-                      />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm={12}>
-                <Table responsive striped bordered hover>
-                  <thead>
-                    <tr>
-                      <th>{t("tableDate")}</th>
-                      <th>{t("tableItem")}</th>
-                      <th>{t("tableCategory")}</th>
-                      <th>{t("tableAmount")}</th>
-                      <th>{t("tableMethod")}</th>
-                      <th>{t("tablePerson")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {expenseData && expenseData.expenses ? (
-                      expenseData.expenses.map((e: Expense, index: number) => {
-                        return (
-                          <tr key={index}>
-                            <td>{e.date}</td>
-                            <td>{e.item}</td>
-                            <td>{e.category}</td>
-                            <td>{e.cost}</td>
-                            <td>{e.card}</td>
-                            <td>{e.person}</td>
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <></>
-                    )}
-                  </tbody>
-                </Table>
-              </Col>
+              <div className="py-3">
+                <span
+                  className={title({
+                    size: "sm",
+                  })}
+                >
+                  {expenseData.total}
+                </span>
+              </div>
+              <p>
+                {getLastMonthTotalDelta(expenseData)}
+                <br />
+                {t("contextSince")}
+              </p>
             </>
           ) : (
-            <></>
+            <h2 className={subtitle()}>{t("loading")}...</h2>
           )}
-        </Row>
-      </Container>
-    </>
+        </div>
+        <Divider />
+        {!expenseIsLoading && expenseData ? (
+          <>
+            <div className="max-w-[900px] gap-2 grid grid-cols-12 grid-rows-3">
+              <Card className="col-span-6 sm:col-span-6">
+                <CardBody>
+                  <div style={{ display: "block", height: "40vh" }}>
+                    <Line
+                      options={{ maintainAspectRatio: false }}
+                      data={{
+                        labels: expensesByMonth.map((e) => e.month),
+                        datasets: [
+                          {
+                            label: "Total",
+                            data: expensesByMonth.map((e) => e.sum),
+                            borderColor: random_rgba(),
+                            fill: false,
+                            tension: 0.1,
+                          },
+                        ],
+                      }}
+                    />
+                  </div>
+                </CardBody>
+              </Card>
+              <Card className="col-span-6 sm:col-span-6">
+                <CardBody>
+                  <div style={{ display: "block", height: "40vh" }}>
+                    <Doughnut
+                      options={{
+                        plugins: {
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        maintainAspectRatio: false,
+                      }}
+                      data={{
+                        labels: expensesByPerson.map((e) => e.person),
+                        datasets: [
+                          {
+                            data: expensesByPerson.map((e) => e.sum),
+                            backgroundColor: expensesByPerson.map((_e) => {
+                              return random_rgba();
+                            }),
+                          },
+                        ],
+                      }}
+                    />
+                  </div>
+                </CardBody>
+              </Card>
+              <Card className="col-span-12 sm:col-span-12">
+                <CardBody>
+                  <div style={{ display: "block", height: "40vh" }}>
+                    <Doughnut
+                      options={{
+                        plugins: {
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        maintainAspectRatio: false,
+                      }}
+                      data={{
+                        labels: expensesByCategory.map((e) => e.category),
+                        datasets: [
+                          {
+                            data: expensesByCategory.map((e) => e.sum),
+                            backgroundColor: expensesByCategory.map((_e) => {
+                              return random_rgba();
+                            }),
+                          },
+                        ],
+                      }}
+                    />
+                  </div>
+                </CardBody>
+              </Card>
+              <Card className="col-span-12 sm:col-span-12">
+                <CardBody>
+                  <div style={{ display: "block", height: "40vh" }}>
+                    <Bar
+                      options={{ maintainAspectRatio: false }}
+                      data={{
+                        labels: expensesByCard.map((e) => e.card),
+                        datasets: [
+                          {
+                            label: "Cards",
+                            data: expensesByCard.map((e) => e.sum),
+                            backgroundColor: random_rgba(),
+                          },
+                        ],
+                      }}
+                    />
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
+            <div className="max-w-[900px] gap-2 grid grid-cols-12 grid-rows-1">
+              <Table
+                className="col-span-12 sm:col-span-12"
+                aria-label="expenses-table"
+              >
+                <TableHeader>
+                  <TableColumn>{t("tableDate")}</TableColumn>
+                  <TableColumn>{t("tableItem")}</TableColumn>
+                  <TableColumn>{t("tableCategory")}</TableColumn>
+                  <TableColumn>{t("tableAmount")}</TableColumn>
+                  <TableColumn>{t("tableMethod")}</TableColumn>
+                  <TableColumn>{t("tablePerson")}</TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {expenseData && expenseData.expenses ? (
+                    expenseData.expenses.map((e: Expense, index: number) => {
+                      return (
+                        <TableRow key={index}>
+                          <TableCell>{e.date}</TableCell>
+                          <TableCell>{e.item}</TableCell>
+                          <TableCell>{e.category}</TableCell>
+                          <TableCell>{e.cost}</TableCell>
+                          <TableCell>{e.card}</TableCell>
+                          <TableCell>{e.person}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <></>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </>
+        ) : (
+          <Spinner />
+        )}
+      </section>
+    </DefaultLayout>
   );
 });

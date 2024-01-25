@@ -1,5 +1,4 @@
 import "@/styles/globals.css";
-import "bootstrap/dist/css/bootstrap.min.css";
 
 import type { AppProps } from "next/app";
 import { NextIntlClientProvider } from "next-intl";
@@ -7,8 +6,7 @@ import { useRouter } from "next/router";
 
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 import { NextUIProvider } from "@nextui-org/react";
-
-import Layout from "../components/layout";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -22,10 +20,10 @@ export default function App({ Component, pageProps }: AppProps) {
         timeZone="Asia/Singapore"
         messages={pageProps.messages}
       >
-        <NextUIProvider>
-          <Layout>
+        <NextUIProvider navigate={router.push}>
+          <NextThemesProvider attribute="class" defaultTheme="dark">
             <Component {...pageProps} />
-          </Layout>
+          </NextThemesProvider>
         </NextUIProvider>
       </NextIntlClientProvider>
     </UserProvider>

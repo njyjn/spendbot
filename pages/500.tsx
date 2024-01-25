@@ -1,6 +1,7 @@
+import DefaultLayout from "@/layouts/default";
 import { GetStaticPropsContext } from "next";
 import { useTranslations } from "next-intl";
-import { Container } from "react-bootstrap";
+import { title } from "@/components/primitives";
 
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
   return {
@@ -13,12 +14,20 @@ export async function getStaticProps({ locale }: GetStaticPropsContext) {
 export default function Custom500() {
   const t = useTranslations("Error");
   return (
-    <Container fluid className="center text-center">
-      <h3>¯\_(ツ)_/¯</h3>
-      <br />
-      <p>
-        <i>{t("poem")}</i>
-      </p>
-    </Container>
+    <DefaultLayout>
+      <div className="inline-block max-w-lg text-center justify-center">
+        <h1
+          className={title({
+            size: "sm",
+          })}
+        >
+          ¯\_(ツ)_/¯
+        </h1>
+        <br />
+        <p>
+          <i>{t("poem")}</i>
+        </p>
+      </div>
+    </DefaultLayout>
   );
 }

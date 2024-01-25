@@ -15,6 +15,11 @@
   "Footer": {
     "footer": "Сделано с"
   },
+  "Home": {
+    "title": "Управляйте своими финансами <colored>легко</colored> с SpendBot.",
+    "subtitle": "Отслеживание чистой стоимости и расходов в одном приложении.",
+    "status": "Приватная бета"
+  },
   "Networth": {
     "title": "Общая стоимость",
     "loading": "Загрузка...",
@@ -83,6 +88,7 @@
     "formUserSubmit": "Отправить",
     "tableUsersActionTooltipDelete": "Удалить пользователя",
     "tableUsersActionTooltipEdit": "Редактировать пользователя",
-    "tableUsersActionTooltipSave": "Сохранить изменения"
+    "tableUsersActionTooltipSave": "Сохранить изменения",
+    "tableNoUsers": "Пользователи отсутствуют"
   }
 }

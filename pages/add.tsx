@@ -1,20 +1,24 @@
 import React, { useState } from "react";
+import DefaultLayout from "@/layouts/default";
+import { title } from "@/components/primitives";
+import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
+import { useTranslations } from "next-intl";
 import useSWR from "swr";
 import {
   Button,
-  Container,
-  Dropdown,
-  DropdownButton,
-  Form,
-  InputGroup,
   Modal,
-} from "react-bootstrap";
+  ModalFooter,
+  ModalHeader,
+  ModalContent,
+  Select,
+  SelectItem,
+  Switch,
+  Input,
+} from "@nextui-org/react";
 import { useUser, withPageAuthRequired } from "@auth0/nextjs-auth0/client";
 import moment from "moment";
 import { Expense } from "./api/expense";
-import { useTranslations } from "next-intl";
-import { GetStaticPropsContext } from "next";
 
 const fetcher = async (uri: string) => {
   const response = await fetch(uri);
@@ -39,7 +43,7 @@ export default withPageAuthRequired(function Expense() {
 
   const [isOffset, setIsOffset] = useState(false);
   const [offsetExpense, setOffsetExpense] = useState(-1);
-  const [person, setPerson] = useState("");
+  const [person, setPerson] = useState(user.user!.name || "");
   const [date, setDate] = useState(new Date(Date.now()));
   const [item, setItem] = useState("");
   const [category, setCategory] = useState("");
@@ -59,36 +63,39 @@ export default withPageAuthRequired(function Expense() {
   );
 
   return (
-    <>
-      <Container fluid>
-        <Modal centered show={isSuccess}>
-          <Modal.Body className="text-center">
-            <p>✅ {t("formSubmitSuccess")}</p>
-            <Button
-              className="mr-1"
-              onClick={() => {
-                setIsSuccess(false);
-                router.reload();
-              }}
-              variant="primary"
-            >
-              🔙 {t("formSubmitSuccessBack")}
-            </Button>
-            <Button
-              className="ml-1"
-              onClick={() => {
-                setIsSuccess(false);
-                router.push("/summary");
-              }}
-              variant="secondary"
-            >
-              📊 {t("formSubmitSuccessGoToSummary")}
-            </Button>
-          </Modal.Body>
+    <DefaultLayout>
+      <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
+        <div className="inline-block max-w-lg text-center justify-center pb-4">
+          <h1 className={title()}>🧮 {t("title")}</h1>
+        </div>
+        <Modal placement="center" isOpen={isSuccess} hideCloseButton>
+          <ModalContent>
+            <ModalHeader>✅ {t("formSubmitSuccess")}</ModalHeader>
+            <ModalFooter>
+              <Button
+                onClick={() => {
+                  setIsSuccess(false);
+                  router.reload();
+                }}
+                color="primary"
+              >
+                🔙 {t("formSubmitSuccessBack")}
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsSuccess(false);
+                  router.push("/summary");
+                }}
+                color="secondary"
+              >
+                📊 {t("formSubmitSuccessGoToSummary")}
+              </Button>
+            </ModalFooter>
+          </ModalContent>
         </Modal>
-        <h1 className="text-center">🧮 {t("title")}</h1>
-        {definitions && expenses ? (
-          <Form
+        <div className="gap-2 grid grid-rows-2">
+          <form
+            className="row-span-12"
             onSubmit={async (event) => {
               event.preventDefault();
               setIsLoading(true);
@@ -127,56 +134,58 @@ export default withPageAuthRequired(function Expense() {
               setIsLoading(false);
             }}
           >
-            <Form.Group className="mb-3">
-              <Form.Check
-                type="switch"
-                id="isOffset"
-                name="isOffset"
-                label={t("formIsCompensation")}
-                onChange={() => {
-                  setIsOffset(!isOffset);
-                }}
-              ></Form.Check>
-            </Form.Group>
-            <Form.Group hidden={!isOffset} className="mb-3">
-              <Form.Label htmlFor="expense">💁 {t("formItem")}</Form.Label>
-              <Form.Select
-                id="expense"
-                name="expense"
-                required={isOffset}
-                onChange={(event) =>
-                  setOffsetExpense(parseInt(event.target.value))
-                }
-              >
-                <option value={undefined}>
-                  {t("formSelectCompensationItem")}
-                </option>
-                {expenses["expenses"].map((e: Expense, index: number) => {
-                  return (
-                    <option key={"Expense." + index} value={index}>
-                      {[
-                        e.date,
-                        e.item,
-                        e.cost,
-                        e.category,
-                        e.card,
-                        e.person,
-                      ].join(" - ")}
-                    </option>
-                  );
-                })}
-              </Form.Select>
-            </Form.Group>
-            <Form.Group hidden={!isOffset} className="mb-3">
-              <InputGroup className="mb-2">
-                <InputGroup.Text>-</InputGroup.Text>
-                <InputGroup.Text>SGD</InputGroup.Text>
-                <Form.Control
-                  id="offsetCost"
-                  name="offsetCost"
-                  required={isOffset}
+            <Switch isSelected={isOffset} onValueChange={setIsOffset}>
+              {t("formIsCompensation")}
+            </Switch>
+            <div id="offsets" hidden={!isOffset}>
+              <div className="gap-2 grid grid-cols-12 grid-rows-2 py-3">
+                <Select
+                  className="col-span-12"
+                  label={`💁 ${t("formItem")}`}
+                  isLoading={!expenses}
+                  isRequired={isOffset}
+                  size="sm"
+                  selectionMode="single"
+                  items={
+                    !expenses
+                      ? []
+                      : expenses["expenses"].map((e: Expense, i: number) => {
+                          return {
+                            value: i,
+                            label: [
+                              e.date,
+                              e.item,
+                              e.cost,
+                              e.category,
+                              e.card,
+                              e.person,
+                            ].join(" - "),
+                          };
+                        })
+                  }
+                  onChange={(event) => {
+                    setOffsetExpense(parseInt(event.target.value));
+                  }}
+                >
+                  {(item: { value: string; label: string }) => {
+                    return (
+                      <SelectItem key={item.value}>{item.label}</SelectItem>
+                    );
+                  }}
+                </Select>
+                <Input
+                  className="col-span-12"
+                  label={t("formInputCompensationAmount")}
+                  isRequired={isOffset}
+                  step={0.1}
                   type="number"
-                  step={0.01}
+                  placeholder="0.00"
+                  startContent={
+                    <div className="pointer-events-none flex items-center">
+                      <span className="text-default-400 text-small">-</span>
+                      <span className="text-default-400 text-small">SGD</span>
+                    </div>
+                  }
                   onChange={(event) => {
                     const expense: Expense =
                       expenses["expenses"].at(offsetExpense);
@@ -187,150 +196,162 @@ export default withPageAuthRequired(function Expense() {
                     setCard("");
                     setPerson(expense.person);
                   }}
-                  placeholder={t("formInputCompensationAmount")}
-                ></Form.Control>
-              </InputGroup>
-            </Form.Group>
-            <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="person">🧍 {t("formPerson")}</Form.Label>
-              <Form.Select
-                id="person"
-                name="person"
-                required={!isOffset}
-                onChange={(event) => setPerson(event.target.value)}
-              >
-                <option value={undefined}>{t("formSelectPerson")}</option>
-                {definitions["persons"].map((e: string) => {
-                  return (
-                    <option
-                      key={"Person." + e}
-                      value={e}
-                      selected={user.user?.name === e}
-                    >
-                      {e}
-                    </option>
-                  );
-                })}
-              </Form.Select>
-            </Form.Group>
-            <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="date">📆 {t("formDate")}</Form.Label>
-              <Form.Control
-                id="date"
-                name="date"
-                type="date"
-                defaultValue={date.toDateString()}
-                onChange={(event) => setDate(new Date(event.target.value))}
-              ></Form.Control>
-            </Form.Group>
-            <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="item">💁 {t("formItem")}</Form.Label>
-              <Form.Control
-                id="item"
-                name="item"
-                required={!isOffset}
-                type="text"
-                onChange={(event) => setItem(event.target.value)}
-                placeholder={t("formInputItem")}
-              ></Form.Control>
-            </Form.Group>
-            <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="category">📦 {t("formCategory")}</Form.Label>
-              <Form.Select
-                id="category"
-                name="category"
-                required={!isOffset}
-                onChange={(event) => setCategory(event.target.value)}
-              >
-                <option value={undefined}>{t("formSelectCategory")}</option>
-                {definitions["categories"].map((e: string) => {
-                  return (
-                    <option key={"Category." + e} value={e}>
-                      {e}
-                    </option>
-                  );
-                })}
-              </Form.Select>
-            </Form.Group>
-            <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="cost">💰 {t("formAmount")}</Form.Label>
-              <InputGroup className="mb-2">
-                <DropdownButton
-                  variant="outline-secondary"
-                  title={costCurrency}
+                />
+              </div>
+            </div>
+            <div id="offsets" hidden={isOffset}>
+              <div className="gap-2 grid grid-cols-12 grid-rows-6 py-3">
+                <Select
+                  label={`🧍 ${t("formPerson")}`}
+                  isRequired={!isOffset}
+                  className="col-span-12"
+                  isLoading={!definitions}
+                  disabled={isLoading}
+                  items={
+                    !definitions
+                      ? []
+                      : definitions["persons"].map((e: string, i: number) => {
+                          return { value: e };
+                        })
+                  }
+                  onChange={(event) => {
+                    setPerson(event.target.value);
+                  }}
+                  selectedKeys={definitions ? [person] : []}
                 >
-                  {definitions["fx"].map(
-                    (f: { currency: string; rate: number }) => {
-                      return (
-                        <Dropdown.Item
-                          key={f.currency}
-                          onClick={() => setCostCurrency(f.currency)}
-                        >
-                          {f.currency}
-                        </Dropdown.Item>
-                      );
-                    },
-                  )}
-                </DropdownButton>
-                <Form.Control
-                  id="cost"
-                  name="cost"
-                  required={!isOffset}
+                  {(item: { value: string }) => {
+                    return (
+                      <SelectItem key={item.value}>{item.value}</SelectItem>
+                    );
+                  }}
+                </Select>
+                <Input
+                  className="col-span-12"
+                  label={`📆 ${t("formDate")}`}
+                  type="date"
+                  onChange={(event) => setDate(new Date(event.target.value))}
+                  defaultValue={date.toDateString()}
+                />
+                <Input
+                  className="col-span-12"
+                  label={`💁 ${t("formItem")}`}
+                  isRequired={!isOffset}
+                  onChange={(event) => setItem(event.target.value)}
+                />
+                <Select
+                  label={`📦 ${t("formCategory")}`}
+                  isRequired={!isOffset}
+                  className="col-span-12"
+                  isLoading={!definitions}
+                  disabled={isLoading}
+                  items={
+                    !definitions
+                      ? []
+                      : definitions["categories"].map(
+                          (e: string, i: number) => {
+                            return { value: e };
+                          },
+                        )
+                  }
+                  onChange={(event) => {
+                    setCategory(event.target.value);
+                  }}
+                >
+                  {(item: { value: string }) => {
+                    return (
+                      <SelectItem key={item.value}>{item.value}</SelectItem>
+                    );
+                  }}
+                </Select>
+                <Input
+                  className="col-span-12"
+                  label={`💰 ${t("formAmount")}`}
+                  isRequired={!isOffset}
+                  step={0.1}
                   type="number"
-                  step={0.01}
+                  placeholder="0.00"
+                  endContent={
+                    <div className="flex items-center">
+                      <label className="sr-only" htmlFor="currency">
+                        Currency
+                      </label>
+                      <select
+                        className="outline-none border-0 bg-transparent text-default-400 text-small"
+                        id="currency"
+                        name="currency"
+                        onChange={(event) => {
+                          setCostCurrency(event.target.value);
+                        }}
+                      >
+                        {definitions
+                          ? definitions["fx"].map(
+                              (f: { currency: string; rate: number }) => {
+                                return (
+                                  <option key={f.currency}>{f.currency}</option>
+                                );
+                              },
+                            )
+                          : []}
+                      </select>
+                    </div>
+                  }
                   onChange={(event) => {
                     let cost = parseFloat(event.target.value).toFixed(2);
                     setCost(cost);
                   }}
-                  placeholder={t("formInputAmount")}
-                ></Form.Control>
-              </InputGroup>
-              <Form.Text muted>
-                {costCurrency !== "SGD"
-                  ? t("formInputHelpCurrency", {
-                      costCurrency: costCurrency,
-                      costCurrencyValue:
-                        definitions["fx"].find(
-                          (f: { currency: string; rate: number }) =>
-                            f.currency === costCurrency,
-                        )?.rate || "?",
-                      asOf: moment().format("LLL"),
-                    })
-                  : ""}
-              </Form.Text>
-            </Form.Group>
-            <Form.Group hidden={isOffset} className="mb-3">
-              <Form.Label htmlFor="card">💳 {t("formMethod")}</Form.Label>
-              <Form.Select
-                id="card"
-                name="card"
-                required={!isOffset}
-                onChange={(event) => setCard(event.target.value)}
-              >
-                <option value={undefined}>{t("formSelectMethod")}</option>
-                {definitions["cards"].map((e: string) => {
-                  return (
-                    <option key={"Card." + e} value={e}>
-                      {e}
-                    </option>
-                  );
-                })}
-              </Form.Select>
-            </Form.Group>
+                  description={
+                    costCurrency !== "SGD"
+                      ? t("formInputHelpCurrency", {
+                          costCurrency: costCurrency,
+                          costCurrencyValue:
+                            definitions["fx"].find(
+                              (f: { currency: string; rate: number }) =>
+                                f.currency === costCurrency,
+                            )?.rate || "?",
+                          asOf: moment().format("LLL"),
+                        })
+                      : ""
+                  }
+                />
+                <Select
+                  label={`💳 ${t("formMethod")}`}
+                  isRequired={!isOffset}
+                  className="col-span-12"
+                  isLoading={!definitions}
+                  disabled={isLoading}
+                  items={
+                    !definitions
+                      ? []
+                      : definitions["cards"].map((e: string) => {
+                          return { value: e };
+                        })
+                  }
+                  onChange={(event) => {
+                    setCard(event.target.value);
+                  }}
+                >
+                  {(item: { value: string }) => {
+                    return (
+                      <SelectItem key={item.value}>{item.value}</SelectItem>
+                    );
+                  }}
+                </Select>
+              </div>
+            </div>
             <Button
               className="mt-3"
               style={{ width: "100%" }}
-              variant="success"
+              color="success"
               type="submit"
             >
               {isLoading ? t("formSubmitLoading") : `➕ ${t("formSubmit")}`}
             </Button>
-          </Form>
-        ) : (
-          <p>{t("loading")}</p>
-        )}
-        <p className="mt-3 text-center">⚠️ {t("formHelpEdits")}</p>
-      </Container>
-    </>
+          </form>
+          <div className="row-span-12 center">
+            <p className="text-center">⚠️ {t("formHelpEdits")}</p>
+          </div>
+        </div>
+      </section>
+    </DefaultLayout>
   );
 });

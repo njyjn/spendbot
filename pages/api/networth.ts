@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { getService } from "../../lib/google";
+import currency from "currency.js";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID_NETWORTH;
 
@@ -34,31 +35,31 @@ export default withApiAuthRequired(async function handler(
     if (req.method === "GET") {
       const result = await service.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: "'Export'!A2:H",
+        range: "'Export'!A2:I",
         majorDimension: "COLUMNS",
       });
-      // console.info(result.data)
       data = {
         total: result.data.values?.at(0)?.at(0),
         allocations: result.data.values?.at(1)?.map((v, i) => {
           return {
             allocation: v,
-            absolute: result.data.values?.at(2)?.at(i),
-            relative: result.data.values?.at(3)?.at(i) || 0,
+            absolute: currency(result.data.values?.at(2)?.at(i) || 0.0).value,
+            relative: currency(result.data.values?.at(3)?.at(i) || 0.0).value,
           };
         }),
-        goals: result.data.values?.at(4)?.map((v, i) => {
+        goals: result.data.values?.at(5)?.map((v, i) => {
           return {
             goal: v,
-            end: result.data.values?.at(5)?.at(i),
-            percent: result.data.values?.at(6)?.at(i),
-            value: result.data.values?.at(7)?.at(i),
+            end: currency(result.data.values?.at(6)?.at(i) || 0).value,
+            percent: currency(result.data.values?.at(7)?.at(i) || 0).value,
+            value: currency(result.data.values?.at(8)?.at(i) || 0).value,
           };
         }),
       };
     }
 
     if (data) {
+      console.log(data);
       return res.status(200).json(data);
     }
     return res.status(400).json({ error: "Bad request" });
