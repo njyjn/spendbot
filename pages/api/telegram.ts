@@ -175,17 +175,18 @@ bot.on(callbackQuery("data"), async (ctx) => {
             category,
             payment_method: paymentMethod,
           } = session.metadata;
-          const month = moment(
+          const validDate = moment(
             date,
             ["L", "LL", "MM-DD-YYYY", "MM-DD-YY"],
             "en-sg",
             false,
-          ).format("MMM YY");
+          );
+          const month = validDate.format("MMM YY");
           // TODO: Convert currencies accordingly
           console.info(`Submitting expense for ${month}...`);
           const result = await addExpense(
             month,
-            date,
+            validDate.toISOString(),
             payee,
             category,
             total,
