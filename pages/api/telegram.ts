@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { Telegraf, session, type Context } from "telegraf";
-import { escapers } from "@telegraf/entity";
 import { Message, Update } from "@telegraf/types";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { message, callbackQuery } from "telegraf/filters";
@@ -123,8 +122,8 @@ bot.command("expense", async (ctx) => {
       category,
       payment_method,
     };
-    await ctx.reply(escapers.MarkdownV2(`<pre language="json">${contents}</pre>`), {
-      parse_mode: "MarkdownV2",
+    await ctx.reply(`\`\`\`json\n${contents}\n\`\`\``, {
+      parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: receiptInlineKeyboard,
       },
@@ -176,9 +175,14 @@ bot.on(callbackQuery("data"), async (ctx) => {
             category,
             payment_method: paymentMethod,
           } = session.metadata;
-          const month = moment(date).format("MMM YY");
+          const month = moment(
+            date,
+            ["L", "LL", "MM-DD-YYYY", "MM-DD-YY"],
+            "en-sg",
+            false,
+          ).format("MMM YY");
           // TODO: Convert currencies accordingly
-          console.info("Submitting expense...");
+          console.info(`Submitting expense for ${month}...`);
           const result = await addExpense(
             month,
             date,
@@ -189,7 +193,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
             ctx.from?.first_name || "bot",
           );
           if (result.ok) {
-            reply = `✅ Expense submitted\\! \`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``;
+            reply = `✅ Expense submitted! \`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``;
           } else {
             reply = `Something went wrong: ${result.error}`;
           }
@@ -197,8 +201,8 @@ bot.on(callbackQuery("data"), async (ctx) => {
       case "cancel":
         console.info("Clearing session...");
         clearSession(ctx);
-        await ctx.editMessageText(escapers.MarkdownV2(reply), {
-          parse_mode: "MarkdownV2",
+        await ctx.editMessageText(reply, {
+          parse_mode: "Markdown",
           reply_markup: undefined,
         });
         break;
@@ -262,10 +266,8 @@ export async function handleOnMessage(
     await ctx.deleteMessage(replyId);
     session.metadata.edit = undefined;
     await ctx.deleteMessage(message!.message_id);
-    await ctx.replyWithMarkdownV2(
-      escapers.MarkdownV2(
-        `<pre language="json">${JSON.stringify(session.metadata)}</pre>`,
-      ),
+    await ctx.replyWithMarkdown(
+      `\`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``,
       {
         reply_to_message_id: session.root,
         reply_markup: {
@@ -382,8 +384,8 @@ export async function handleOnPhoto(
   }
 
   await ctx.deleteMessage(loadingMessageId);
-  await ctx.reply(escapers.MarkdownV2(reply), {
-    parse_mode: "MarkdownV2",
+  await ctx.reply(reply, {
+    parse_mode: "Markdown",
     reply_markup: {
       inline_keyboard: hideInlineKeyboardMarkup ? [] : receiptInlineKeyboard,
     },
