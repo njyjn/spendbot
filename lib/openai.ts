@@ -42,8 +42,9 @@ export async function analyzeReceipt(base64file: string) {
               type: "text",
               text: `Here is an photograph of a receipt or a screenshot of a mobile payment transaction confirmation.
                 Extract the following details from this receipt: [date, payee, currency,
-                grand total, category, payment method]. Reply as a JSON-formatted string only. An example:
-                "{\\"date\\":\\"01/13/24\\",\\"payee\\":\\"Little Farms\\",\\"currency\\":\\"SGD\\",
+                grand total, category, payment method]. Reply as a JSON-formatted string only. The date must be an ISO-8601
+                formatted date string (e.g. 2024-02-08). An example:
+                "{\\"date\\":\\"2024-12-08\\",\\"payee\\":\\"Little Farms\\",\\"currency\\":\\"SGD\\",
                 \\"total\\":123.10,\\"category\\":\\"Dining\\",\\"payment_method\\":\\"card\\"}"
                 The reply must not be in JSON markdown format e.g. \`\`\`json\n\`\`\`.
                 Infer a category of the overall spend from the following list: 

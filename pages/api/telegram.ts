@@ -10,6 +10,7 @@ import getDb from "@/lib/kysely";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const BASE_PATH = process.env.BASE_PATH || "";
+const IS_TEST_ENV = process.env.NODE_ENV === "development";
 
 interface ContextWithSession<U extends Update = Update> extends Context<U> {
   session: {
@@ -28,6 +29,10 @@ const receiptInlineKeyboard: InlineKeyboardButton[][] = [
     },
   ],
   [
+    {
+      text: "Validate",
+      callback_data: "validate",
+    },
     {
       text: "Manual Entry",
       url: "https://bot.ngsim.net/spend/add",
@@ -71,11 +76,20 @@ const receiptInlineKeyboard: InlineKeyboardButton[][] = [
   ],
 ];
 
+function getDateAndMonth(date: string) {
+  const validDate = moment(date);
+  const month = validDate.format("MMM YY");
+  return {
+    validDate,
+    month,
+  };
+}
+
 const db = getDb();
 
 const bot = new Telegraf<ContextWithSession>(BOT_TOKEN, {
   telegram: {
-    testEnv: process.env.NODE_ENV === "development",
+    testEnv: IS_TEST_ENV,
     webhookReply: false,
   },
 });
@@ -166,6 +180,15 @@ bot.on(callbackQuery("data"), async (ctx) => {
           replyId,
         };
         break;
+      case "validate":
+        if (session.metadata) {
+          const { date } = session.metadata;
+          const { validDate, month } = getDateAndMonth(date);
+          await ctx.reply(
+            `Date parsed as ${validDate.toISOString()} for month ${month}`,
+          );
+        }
+        break;
       case "submit":
         if (session.metadata) {
           const {
@@ -176,13 +199,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
             category,
             payment_method: paymentMethod,
           } = session.metadata;
-          const validDate = moment(
-            date,
-            ["L", "LL", "MM-DD-YYYY", "MM-DD-YY"],
-            "en-sg",
-            false,
-          );
-          const month = validDate.format("MMM YY");
+          const { validDate, month } = getDateAndMonth(date);
           // TODO: Convert currencies accordingly
           console.info(`Submitting expense for ${month}...`);
           const result = await addExpense(
@@ -328,12 +345,19 @@ export async function handleOnPhoto(
   ).message_id;
 
   const photo = message.photo.pop();
-  const fileLink = await ctx.telegram.getFileLink(photo!.file_id);
   console.info(`Photo received with ID ${photo!.file_id}`);
+  const fileLink = await ctx.telegram.getFileLink(photo!.file_id);
+  // In test envs, the file link does not include the /test path as it should
+  if (IS_TEST_ENV) {
+    const pathComponents = fileLink.pathname.split("/");
+    pathComponents.splice(3, 0, "test");
+    fileLink.pathname = pathComponents.join("/");
+    console.log(`[TESTENV] File link manually corrected`);
+  }
   // Download photo as base64 file
   const file = await fetch(fileLink);
   const base64file = Buffer.from(await file.arrayBuffer()).toString("base64");
-
+  console.debug(fileLink);
   await ctx.sendChatAction("typing");
   // Pass file to GPT for analysis
   const {
@@ -361,7 +385,7 @@ export async function handleOnPhoto(
           error,
         } = JSON.parse(response);
         session.metadata = {
-          date,
+          date: moment(date).toISOString(),
           payee,
           currency,
           total,
