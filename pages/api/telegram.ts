@@ -1,12 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { Telegraf, session, type Context } from "telegraf";
 import { Message, Update } from "@telegraf/types";
-import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
+import {
+  InlineKeyboardButton,
+  KeyboardButton,
+} from "telegraf/typings/core/types/typegram";
 import { message, callbackQuery } from "telegraf/filters";
 import { analyzeReceipt, completeChat } from "../../lib/openai";
 import moment from "moment";
 import { addExpense } from "./expense";
 import getDb from "@/lib/kysely";
+import { getDefintions } from "./definitions";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const BASE_PATH = process.env.BASE_PATH || "";
@@ -169,11 +173,41 @@ bot.on(callbackQuery("data"), async (ctx) => {
       case "total":
       case "category":
       case "payment_method":
-        const replyId = (
-          await ctx.reply(`Editing ${ctx.callbackQuery.data}:`, {
-            reply_to_message_id: messageId,
-          })
-        ).message_id;
+        let replyId;
+        if (
+          callbackQuery.data === "payment_method" ||
+          callbackQuery.data === "category"
+        ) {
+          const definitions = await getDefintions();
+          let replyMarkup;
+          let methodsKeyboard: KeyboardButton[][];
+          if (definitions) {
+            if (callbackQuery.data === "payment_method") {
+              methodsKeyboard = definitions.cards.map((card) => [
+                { text: card },
+              ]);
+            } else {
+              methodsKeyboard = definitions.categories.map((category) => [
+                { text: category },
+              ]);
+            }
+            replyMarkup = {
+              reply_markup: {
+                keyboard: methodsKeyboard,
+                one_time_keyboard: true,
+              },
+            };
+          }
+          replyId = (
+            await ctx.reply(`Choose a payment method or enter one`, replyMarkup)
+          ).message_id;
+        } else {
+          replyId = (
+            await ctx.reply(`Editing ${ctx.callbackQuery.data}:`, {
+              reply_to_message_id: messageId,
+            })
+          ).message_id;
+        }
         session.metadata.edit = {
           originId: messageId,
           field: callbackQuery.data,
@@ -291,6 +325,7 @@ export async function handleOnMessage(
         reply_to_message_id: session.root,
         reply_markup: {
           inline_keyboard: receiptInlineKeyboard,
+          remove_keyboard: true,
         },
       },
     );
@@ -302,6 +337,9 @@ export async function handleOnMessage(
     if (response) {
       await ctx.reply(response, {
         reply_to_message_id: message.message_id,
+        reply_markup: {
+          remove_keyboard: true,
+        },
       });
       if (!session.metadata?.completions) {
         const completions = [];

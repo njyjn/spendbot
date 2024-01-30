@@ -8,31 +8,10 @@ export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const service = await getService();
-
   let data;
-
   try {
     if (req.method === "GET") {
-      const result = await service.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: `'Definitions'!A1:E`,
-        majorDimension: "COLUMNS",
-      });
-
-      if (result.data.values) {
-        data = {
-          cards: result.data.values[0].slice(1).sort(),
-          categories: result.data.values[1].slice(1).sort(),
-          persons: result.data.values[2].slice(1).sort(),
-          fx: result.data.values[3].slice(1).map((f, i) => {
-            return {
-              currency: f,
-              rate: result.data.values?.at(4)?.slice(1).at(i),
-            };
-          }),
-        };
-      }
+      data = await getDefintions();
     }
     if (data) {
       return res.status(200).json(data);
@@ -43,3 +22,30 @@ export default withApiAuthRequired(async function handler(
     return res.status(500).json({ errors: e.errors });
   }
 });
+
+export async function getDefintions() {
+  const service = await getService();
+
+  const result = await service.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: `'Definitions'!A1:E`,
+    majorDimension: "COLUMNS",
+  });
+
+  let data;
+
+  if (result.data.values) {
+    data = {
+      cards: result.data.values[0].slice(1).sort(),
+      categories: result.data.values[1].slice(1).sort(),
+      persons: result.data.values[2].slice(1).sort(),
+      fx: result.data.values[3].slice(1).map((f, i) => {
+        return {
+          currency: f,
+          rate: result.data.values?.at(4)?.slice(1).at(i),
+        };
+      }),
+    };
+  }
+  return data;
+}
