@@ -98,7 +98,13 @@ const bot = new Telegraf<ContextWithSession>(BOT_TOKEN, {
   },
 });
 
-bot.use(session({ defaultSession: () => ({ count: 0, type: "default" }) }));
+bot.use(
+  session({
+    getSessionKey: (ctx) =>
+      ctx.chat && ctx.from ? `${ctx.chat.id}:${ctx.from.id}` : undefined,
+    defaultSession: () => ({ count: 0, type: "default" }),
+  }),
+);
 
 bot.start(async (ctx) => {
   await handleStartCommand(ctx);
