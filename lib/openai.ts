@@ -15,7 +15,6 @@ export async function completeChat(
     messages = [{ role: "system", content: "You are a helpful assistant." }];
   }
   messages.push({ role: "user", content: prompt });
-  console.debug(messages);
   const response = await ai.chat.completions.create({
     messages: messages,
     model: "gpt-4",

@@ -4,6 +4,7 @@ import { Message, Update } from "@telegraf/types";
 import {
   InlineKeyboardButton,
   KeyboardButton,
+  MessageEntity,
 } from "telegraf/typings/core/types/typegram";
 import { message, callbackQuery } from "telegraf/filters";
 import { analyzeReceipt, completeChat } from "../../lib/openai";
@@ -89,6 +90,61 @@ function getDateAndMonth(date: string) {
   };
 }
 
+function getUsernameMentionEntity(
+  username: string,
+  source: string,
+  messageEntities?: MessageEntity[],
+) {
+  if (!messageEntities) return undefined;
+  const mentions = messageEntities.filter(
+    (entity) => entity.type === "mention",
+  );
+  if (mentions.length > 0) {
+    const usernames = mentions.map((mention, index) => {
+      return {
+        value: source.slice(mention.offset, mention.offset + mention.length),
+        index,
+      };
+    });
+    const matched = usernames.find((u) => u.value === "@" + username);
+    if (matched) {
+      return mentions.at(matched.index);
+    }
+  }
+  return undefined;
+}
+
+function isUsernameMentioned(
+  username: string,
+  source: string,
+  messageEntities?: MessageEntity[],
+) {
+  const entity = getUsernameMentionEntity(username, source, messageEntities);
+  return entity !== undefined;
+}
+
+function isUsernameCommanded(
+  username: string,
+  source: string,
+  messageEntities?: MessageEntity[],
+) {
+  if (!messageEntities) return false;
+  const commands = messageEntities.filter(
+    (entity) => entity.type === "bot_command",
+  );
+  if (commands.length === 1) {
+    // Username must be present in command;
+    const command = source
+      .slice(commands[0].offset, commands[0].length)
+      .split("@");
+    const parsedUsername = command.at(1);
+    if (parsedUsername && parsedUsername === username) {
+      return true;
+    }
+  }
+  return false;
+}
+
 const db = getDb();
 
 const bot = new Telegraf<ContextWithSession>(BOT_TOKEN, {
@@ -111,6 +167,62 @@ bot.start(async (ctx) => {
 });
 
 bot.use(async (ctx, next) => {
+  // In group chats, only @mentions are handled, unless there is prior compatible session context
+  if (ctx.chat!.type === "private") {
+    return await next();
+  } else {
+    const { message, callbackQuery, session } = ctx;
+    if (message && "text" in message) {
+      if (
+        isUsernameCommanded(
+          ctx.botInfo.username,
+          message.text,
+          message.entities,
+        )
+      ) {
+        return await next();
+      }
+      // Conversations not supported. Must have existing context
+      if (session.type === "receipt") {
+        if (
+          isUsernameMentioned(
+            ctx.botInfo.username,
+            message.text,
+            message.entities,
+          )
+        ) {
+          return await next();
+        }
+      } else {
+        return await ctx.reply(
+          `I can only hold conversations in direct messages. Let's take this to @${ctx.botInfo.username}.`,
+          {
+            reply_to_message_id: ctx.message!.message_id,
+            disable_notification: true,
+          },
+        );
+      }
+    } else if (message && "photo" in message && "caption" in message) {
+      // Caption must contain bot username @username
+      if (
+        isUsernameMentioned(
+          ctx.botInfo.username,
+          message.caption!,
+          message.caption_entities,
+        )
+      ) {
+        return await next();
+      }
+    } else if (callbackQuery && "data" in callbackQuery) {
+      if (session.type === "receipt") {
+        return await next();
+      }
+    }
+  }
+  clearSession(ctx);
+});
+
+bot.use(async (ctx, next) => {
   // Security -- only authorized users can engage
   const user = await db
     .selectFrom("users")
@@ -127,15 +239,23 @@ bot.use(async (ctx, next) => {
   }
 });
 
-bot.command("expense", async (ctx) => {
+bot.command("json", async (ctx) => {
   const { message, session } = ctx;
 
   session.count = 1;
   session.type = "receipt";
   session.root = message.message_id;
 
+  const commandEntity = ctx.message.entities!.filter(
+    (entity) => entity.type === "bot_command",
+  )[0];
+  const command = message.text.slice(
+    commandEntity.offset,
+    commandEntity.length,
+  );
+
   try {
-    const contents = message.text.split("/expense ")[1];
+    const contents = message.text.split(command + " ")[1];
     const { date, payee, currency, total, category, payment_method } =
       JSON.parse(contents);
     session.metadata = {
@@ -147,6 +267,34 @@ bot.command("expense", async (ctx) => {
       payment_method,
     };
     await ctx.reply(`\`\`\`json\n${contents}\n\`\`\``, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: receiptInlineKeyboard,
+      },
+      reply_to_message_id: message?.message_id,
+    });
+  } catch (e) {
+    await ctx.reply(`Something went wrong: ${e}`);
+  }
+});
+
+bot.command("expense", async (ctx) => {
+  const { message, session } = ctx;
+
+  session.count = 1;
+  session.type = "receipt"; // here we hijack the receipt flow to present the user the inline keyboard
+  session.root = message.message_id;
+
+  try {
+    session.metadata = {
+      date: moment().toISOString(),
+      payee: "",
+      currency: "SGD",
+      total: 0,
+      category: "",
+      payment_method: "",
+    };
+    await ctx.reply("Tell me more about your expense", {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: receiptInlineKeyboard,
@@ -188,15 +336,20 @@ bot.on(callbackQuery("data"), async (ctx) => {
           let replyMarkup;
           let methodsKeyboard: KeyboardButton[][];
           if (definitions) {
+            let prefix = "";
+            if (ctx.chat!.type !== "private") {
+              prefix = "@" + ctx.botInfo.username + " ";
+            }
             if (callbackQuery.data === "payment_method") {
               methodsKeyboard = definitions.cards.map((card) => [
-                { text: card },
+                { text: prefix + card },
               ]);
             } else {
               methodsKeyboard = definitions.categories.map((category) => [
-                { text: category },
+                { text: prefix + category },
               ]);
             }
+            console.debug(methodsKeyboard);
             replyMarkup = {
               reply_markup: {
                 keyboard: methodsKeyboard,
@@ -211,6 +364,9 @@ bot.on(callbackQuery("data"), async (ctx) => {
           replyId = (
             await ctx.reply(`Editing ${ctx.callbackQuery.data}:`, {
               reply_to_message_id: messageId,
+              reply_markup: {
+                force_reply: true,
+              },
             })
           ).message_id;
         }
@@ -316,15 +472,30 @@ export async function handleOnMessage(
   const { message, session } = ctx;
 
   session.count++;
-  session.type = "message";
+
+  await ctx.sendChatAction("typing");
+
+  // Scrub @username from message text if included
+  let text = message.text;
+  const mentionEntity = getUsernameMentionEntity(
+    ctx.botInfo.username,
+    text,
+    ctx.message.entities,
+  );
+  if (mentionEntity) {
+    text = text.slice(mentionEntity.offset + mentionEntity.length + 1);
+  }
 
   if (session.metadata?.edit) {
+    session.type = "receipt";
     const { field, replyId, originId } = session.metadata.edit;
-    session.metadata[field] = message.text;
+    session.metadata[field] = text;
     await ctx.deleteMessage(originId);
     await ctx.deleteMessage(replyId);
     session.metadata.edit = undefined;
-    await ctx.deleteMessage(message!.message_id);
+    try {
+      await ctx.deleteMessage(message!.message_id);
+    } catch {}
     await ctx.replyWithMarkdown(
       `\`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``,
       {
@@ -336,10 +507,8 @@ export async function handleOnMessage(
       },
     );
   } else {
-    const response = await completeChat(
-      message.text,
-      session.metadata?.completions,
-    );
+    session.type = "message";
+    const response = await completeChat(text, session.metadata?.completions);
     if (response) {
       await ctx.reply(response, {
         reply_to_message_id: message.message_id,
