@@ -25,7 +25,7 @@ export async function completeChat(
   return response.choices[0].message.content;
 }
 
-export async function analyzeReceipt(base64ofile: string) {
+export async function analyzeReceipt(base64file: string) {
   try {
     const response = await ai.chat.completions.create({
       model: "gpt-4o-mini",
