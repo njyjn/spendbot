@@ -197,7 +197,9 @@ bot.use(async (ctx, next) => {
         return await ctx.reply(
           `I can only hold conversations in direct messages. Let's take this to @${ctx.botInfo.username}.`,
           {
-            reply_to_message_id: ctx.message!.message_id,
+            reply_parameters: {
+              message_id: ctx.message!.message_id,
+            },
             disable_notification: true,
           },
         );
@@ -271,7 +273,9 @@ bot.command("json", async (ctx) => {
       reply_markup: {
         inline_keyboard: receiptInlineKeyboard,
       },
-      reply_to_message_id: message?.message_id,
+      reply_parameters: {
+        message_id: message.message_id,
+      },
     });
   } catch (e) {
     await ctx.reply(`Something went wrong: ${e}`);
@@ -299,7 +303,9 @@ bot.command("expense", async (ctx) => {
       reply_markup: {
         inline_keyboard: receiptInlineKeyboard,
       },
-      reply_to_message_id: message?.message_id,
+      reply_parameters: {
+        message_id: message.message_id,
+      },
     });
   } catch (e) {
     await ctx.reply(`Something went wrong: ${e}`);
@@ -363,7 +369,10 @@ bot.on(callbackQuery("data"), async (ctx) => {
         } else {
           replyId = (
             await ctx.reply(`Editing ${ctx.callbackQuery.data}:`, {
-              reply_to_message_id: messageId,
+              reply_parameters: {
+                message_id: messageId || 0,
+                allow_sending_without_reply: true,
+              },
               reply_markup: {
                 force_reply: true,
               },
@@ -453,7 +462,10 @@ export async function handleStartCommand(ctx: ContextWithSession) {
   let reply = `Hello, ${from!.first_name} (${from!.id})`;
 
   const didReply = await ctx.reply(reply, {
-    reply_to_message_id: message?.message_id,
+    reply_parameters: {
+      message_id: message?.message_id || 0,
+      allow_sending_without_reply: true,
+    },
   });
 
   if (didReply) {
@@ -499,7 +511,10 @@ export async function handleOnMessage(
     await ctx.replyWithMarkdown(
       `\`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``,
       {
-        reply_to_message_id: session.root,
+        reply_parameters: {
+          message_id: session?.root || 0,
+          allow_sending_without_reply: true,
+        },
         reply_markup: {
           inline_keyboard: receiptInlineKeyboard,
           remove_keyboard: true,
@@ -511,7 +526,9 @@ export async function handleOnMessage(
     const response = await completeChat(text, session.metadata?.completions);
     if (response) {
       await ctx.reply(response, {
-        reply_to_message_id: message.message_id,
+        reply_parameters: {
+          message_id: message.message_id,
+        },
         reply_markup: {
           remove_keyboard: true,
         },
@@ -629,7 +646,9 @@ export async function handleOnPhoto(
     reply_markup: {
       inline_keyboard: hideInlineKeyboardMarkup ? [] : receiptInlineKeyboard,
     },
-    reply_to_message_id: message?.message_id,
+    reply_parameters: {
+      message_id: message.message_id,
+    },
   });
 }
 
