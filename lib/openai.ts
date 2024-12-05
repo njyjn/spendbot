@@ -17,7 +17,7 @@ export async function completeChat(
   messages.push({ role: "user", content: prompt });
   const response = await ai.chat.completions.create({
     messages: messages,
-    model: "gpt-4",
+    model: "gpt-4o",
   });
 
   console.debug(response);
@@ -25,10 +25,10 @@ export async function completeChat(
   return response.choices[0].message.content;
 }
 
-export async function analyzeReceipt(base64file: string) {
+export async function analyzeReceipt(base64ofile: string) {
   try {
     const response = await ai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
