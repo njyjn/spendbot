@@ -534,6 +534,12 @@ export async function handleOnMessage(
     if (looksLikeExpense) {
       // Try to parse as NLP expense
       await ctx.sendChatAction("typing");
+      const loadingMsg = await ctx.reply("Working on your expense...", {
+        reply_parameters: {
+          message_id: message.message_id,
+          allow_sending_without_reply: true,
+        },
+      });
       try {
         const expenseData = await parseAndAddExpense(text, ctx.from?.id.toString());
 
@@ -548,6 +554,9 @@ export async function handleOnMessage(
               },
             },
           );
+          try {
+            await ctx.deleteMessage(loadingMsg.message_id);
+          } catch {}
           return;
         } else {
           // Not a valid expense, notify and fall through to chat
@@ -571,10 +580,15 @@ export async function handleOnMessage(
             },
           },
         );
+      } finally {
+        try {
+          await ctx.deleteMessage(loadingMsg.message_id);
+        } catch {}
       }
     }
 
     // Fall through to general chat
+    await ctx.sendChatAction("typing");
     const response = await completeChat(text, session.metadata?.completions);
     if (response) {
       await ctx.reply(response, {
