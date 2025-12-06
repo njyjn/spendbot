@@ -4,7 +4,16 @@ import { ChatCompletionMessageParam } from "openai/resources";
 const MAX_TOKENS = parseInt(process.env.OPENAI_MAX_TOKENS || "1000");
 const TEMPERATURE = parseInt(process.env.OPENAI_TEMPERATURE || "0");
 
-const ai = new OpenAI();
+let openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI();
+  }
+  return openai;
+}
+
+const DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant.";
 
 export async function completeChat(
   prompt: string,
@@ -12,22 +21,21 @@ export async function completeChat(
 ) {
   let messages = history;
   if (!messages) {
-    messages = [{ role: "system", content: "You are a helpful assistant." }];
+    messages = [{ role: "system", content: DEFAULT_SYSTEM_PROMPT }];
   }
   messages.push({ role: "user", content: prompt });
-  const response = await ai.chat.completions.create({
-    messages: messages,
+  const response = await getOpenAI().chat.completions.create({
+    messages,
     model: "gpt-4o",
   });
 
-  console.debug(response);
-
+  console.debug("OpenAI response:", response);
   return response.choices[0].message.content;
 }
 
 export async function analyzeReceipt(base64file: string) {
   try {
-    const response = await ai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -68,7 +76,7 @@ export async function analyzeReceipt(base64file: string) {
       temperature: TEMPERATURE,
     });
 
-    console.debug(response);
+    console.debug("OpenAI receipt analysis response:", response);
 
     return {
       ok: true,
@@ -77,7 +85,7 @@ export async function analyzeReceipt(base64file: string) {
       json: response.choices.at(0)?.message.content,
     };
   } catch (e) {
-    console.error("Failed to analyze receipt:", e);
+    console.error("Failed to analyze receipt with OpenAI:", e);
     return { ok: false, error: e };
   }
 }

@@ -4,6 +4,11 @@ import { getService } from "../../lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
+// Cache definitions with TTL
+let cachedDefinitions: any = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -24,6 +29,13 @@ export default withApiAuthRequired(async function handler(
 });
 
 export async function getDefintions() {
+  const now = Date.now();
+  if (cachedDefinitions && now - cacheTimestamp < CACHE_TTL_MS) {
+    console.debug("Using cached definitions");
+    return cachedDefinitions;
+  }
+
+  console.debug("Fetching fresh definitions from sheet");
   const service = await getService();
 
   const result = await service.spreadsheets.values.get({
@@ -46,6 +58,9 @@ export async function getDefintions() {
         };
       }),
     };
+    
+    cachedDefinitions = data;
+    cacheTimestamp = now;
   }
   return data;
 }

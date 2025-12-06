@@ -7,7 +7,8 @@ import {
   MessageEntity,
 } from "telegraf/typings/core/types/typegram";
 import { message, callbackQuery } from "telegraf/filters";
-import { analyzeReceipt, completeChat } from "../../lib/openai";
+import { analyzeReceipt, completeChat } from "../../lib/ai";
+import { parseAndAddExpense } from "../../lib/nlp";
 import moment from "moment";
 import { addExpense } from "./expense";
 import getDb from "@/lib/kysely";
@@ -523,6 +524,57 @@ export async function handleOnMessage(
     );
   } else {
     session.type = "message";
+    
+    // Check if this looks like an expense entry (contains amount, $ sign, or expense keywords)
+    const expenseKeywords = ["spent", "expense", "cost", "paid", "buy", "purchase", "$", "sgd"];
+    const looksLikeExpense = expenseKeywords.some((keyword) =>
+      text.toLowerCase().includes(keyword),
+    );
+
+    if (looksLikeExpense) {
+      // Try to parse as NLP expense
+      await ctx.sendChatAction("typing");
+      try {
+        const expenseData = await parseAndAddExpense(text, ctx.from?.id.toString());
+
+        if (expenseData.ok) {
+          const { expense } = expenseData;
+          await ctx.reply(
+            `✅ Expense recorded!\n\`\`\`json\n${JSON.stringify(expense, null, 2)}\n\`\`\``,
+            {
+              parse_mode: "Markdown",
+              reply_parameters: {
+                message_id: message.message_id,
+              },
+            },
+          );
+          return;
+        } else {
+          // Not a valid expense, notify and fall through to chat
+          console.debug(`NLP expense parsing failed: ${expenseData.error}, treating as chat`);
+          await ctx.reply(
+            `⚠️ Could not parse as expense (${expenseData.error}). Treating as a regular message...`,
+            {
+              reply_parameters: {
+                message_id: message.message_id,
+              },
+            },
+          );
+        }
+      } catch (e) {
+        console.error("Error parsing NLP expense:", e);
+        await ctx.reply(
+          `⚠️ Error processing expense. Treating as a regular message...`,
+          {
+            reply_parameters: {
+              message_id: message.message_id,
+            },
+          },
+        );
+      }
+    }
+
+    // Fall through to general chat
     const response = await completeChat(text, session.metadata?.completions);
     if (response) {
       await ctx.reply(response, {
@@ -577,18 +629,46 @@ export async function handleOnPhoto(
   const photo = message.photo.pop();
   console.info(`Photo received with ID ${photo!.file_id}`);
   const fileLink = await ctx.telegram.getFileLink(photo!.file_id);
-  // In test envs, the file link does not include the /test path as it should
-  if (IS_TEST_ENV) {
-    const pathComponents = fileLink.pathname.split("/");
-    pathComponents.splice(3, 0, "test");
-    fileLink.pathname = pathComponents.join("/");
-    console.log(`[TESTENV] File link manually corrected`);
+  console.debug(`Original file link: ${fileLink.toString()}`);
+  
+  // In test envs, try both with and without /test in path
+  let fetchUrl = fileLink.toString();
+  if (IS_TEST_ENV && !fetchUrl.includes("/test/test/")) {
+    // Try adding /test path if it's not already there
+    fetchUrl = fetchUrl.replace("/file/bot", "/file/bot/test/");
+    console.debug(`[TESTENV] Adjusted file link: ${fetchUrl}`);
   }
+  
   // Download photo as base64 file
-  const file = await fetch(fileLink);
-  const base64file = Buffer.from(await file.arrayBuffer()).toString("base64");
-  console.debug(fileLink);
+  let file = await fetch(fetchUrl);
+  
+  // If 404 in test env, try without the /test prefix
+  if (!file.ok && IS_TEST_ENV && fetchUrl.includes("/file/bot/test/")) {
+    console.debug("[TESTENV] First attempt failed, trying without /test prefix");
+    fetchUrl = fileLink.toString();
+    file = await fetch(fetchUrl);
+  }
+  
+  if (!file.ok) {
+    console.error(`Failed to fetch image: ${file.status} ${file.statusText} from ${fetchUrl}`);
+    await ctx.reply("Failed to download image from Telegram");
+    return;
+  }
+  const arrayBuffer = await file.arrayBuffer();
+  console.debug(`Downloaded image: ${arrayBuffer.byteLength} bytes`);
+  const base64file = Buffer.from(arrayBuffer).toString("base64");
+  console.debug(`Base64 length: ${base64file.length} characters`);
+  console.debug(`Final successful URL: ${fetchUrl}`);
   await ctx.sendChatAction("typing");
+  
+  // Fetch definitions for receipt analysis
+  let definitions = null;
+  try {
+    definitions = await getDefintions();
+  } catch (e) {
+    console.warn("Failed to fetch definitions for receipt analysis:", e);
+  }
+  
   // Pass file to GPT for analysis
   const {
     ok,
@@ -596,15 +676,26 @@ export async function handleOnPhoto(
     usage,
     json: response,
     error,
-  } = await analyzeReceipt(base64file);
+  } = await analyzeReceipt(base64file, definitions ? { categories: definitions.categories || [], cards: definitions.cards || [] } : undefined);
   let reply = "Failed to parse image";
   let hideInlineKeyboardMarkup = true;
   if (ok) {
-    console.info(`[${id}] used ${usage!.total_tokens}`);
+    const totalTokens = (usage as any)?.total_tokens ?? (usage as any)?.totalTokenCount;
+    if (totalTokens) {
+      console.info(`[${id}] used ${totalTokens}`);
+    }
 
     if (response) {
       console.debug(response);
       try {
+        // Strip markdown code blocks if present
+        let jsonString = response.trim();
+        if (jsonString.startsWith("```json")) {
+          jsonString = jsonString.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+        } else if (jsonString.startsWith("```")) {
+          jsonString = jsonString.replace(/^```\s*/, "").replace(/\s*```$/, "");
+        }
+        
         const {
           date,
           payee,
@@ -613,7 +704,7 @@ export async function handleOnPhoto(
           category,
           payment_method,
           error,
-        } = JSON.parse(response);
+        } = JSON.parse(jsonString);
         session.metadata = {
           date: moment(date).toISOString(),
           payee,
@@ -625,7 +716,7 @@ export async function handleOnPhoto(
         if (error) {
           throw new Error(error);
         }
-        reply = `Please verify the details of the expense: \`\`\`\n${response}\n\`\`\``;
+        reply = `Please verify the details of the expense: \`\`\`\n${jsonString}\n\`\`\``;
         hideInlineKeyboardMarkup = false;
       } catch (e) {
         console.error("Failed to parse response from GPT:", e);

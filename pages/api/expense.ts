@@ -101,7 +101,8 @@ export default withApiAuthRequired(async function handler(
     }
     return res.status(400).json({ error: "Bad request" });
   } catch (e: any) {
-    return res.status(500).json({ errors: e.errors });
+    console.error("Failed to fetch/process expense:", e);
+    return res.status(500).json({ error: e.message || JSON.stringify(e) });
   }
 });
 

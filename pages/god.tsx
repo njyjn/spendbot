@@ -225,6 +225,22 @@ export default withPageAuthRequired(function God() {
                     month: month,
                   })}`}
             </Button>
+            <Button
+              fullWidth
+              color="secondary"
+              disabled={isLoading}
+              className="mt-2"
+              onPress={async () => {
+                setIsLoading(true);
+                const response = await fetch(`/spend/api/telegram?setWebhook=true`);
+                if ((await response.json()).ok) {
+                  setIsSuccess(true);
+                }
+                setIsLoading(false);
+              }}
+            >
+              {isLoading ? t("formSubmitLoading") : "🤖 Set Telegram Webhook"}
+            </Button>
           </div>
           <div className="row-span-12"></div>
           <h4 className={subtitle()}>{t("users")}</h4>
