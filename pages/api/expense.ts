@@ -3,6 +3,7 @@ import moment from "moment";
 import { withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { getService } from "../../lib/google";
 import currency from "currency.js";
+import { notifySlackExpense } from "../../lib/slack";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const DEFAULT_RANGE_NOTATION = "!A1:G";
@@ -158,6 +159,20 @@ export async function addExpense(
         ],
       },
     });
+    
+    if (result.status === 200) {
+      // Send Slack notification on success
+      await notifySlackExpense({
+        date,
+        payee: item,
+        category,
+        amount: typeof cost === "string" ? parseFloat(cost) : cost,
+        currency: "SGD",
+        payment_method: card,
+        person,
+      });
+    }
+    
     return {
       ok: result.status === 200,
     };
