@@ -348,11 +348,11 @@ bot.on(callbackQuery("data"), async (ctx) => {
               prefix = "@" + ctx.botInfo.username + " ";
             }
             if (callbackQuery.data === "payment_method") {
-              methodsKeyboard = definitions.cards.map((card) => [
+              methodsKeyboard = definitions.cards.map((card: string) => [
                 { text: prefix + card },
               ]);
             } else {
-              methodsKeyboard = definitions.categories.map((category) => [
+              methodsKeyboard = definitions.categories.map((category: string) => [
                 { text: prefix + category },
               ]);
             }
