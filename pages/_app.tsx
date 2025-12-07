@@ -11,10 +11,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   return (
-    <UserProvider
-      loginUrl="/spend/api/auth/login"
-      profileUrl="/spend/api/auth/me"
-    >
+    <UserProvider>
       <NextIntlClientProvider
         locale={router.locale}
         timeZone="Asia/Singapore"
