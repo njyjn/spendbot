@@ -254,8 +254,8 @@ export default withPageAuthRequired(function Summary() {
         <Divider />
         {!expenseIsLoading && expenseData ? (
           <>
-            <div className="max-w-[900px] gap-2 grid grid-cols-12 grid-rows-3">
-              <Card className="col-span-6 sm:col-span-6">
+            <div className="w-full gap-4 grid grid-cols-1 lg:grid-cols-2">
+              <Card className="col-span-1">
                 <CardBody>
                   <div style={{ display: "block", height: "40vh" }}>
                     <Line
@@ -276,7 +276,7 @@ export default withPageAuthRequired(function Summary() {
                   </div>
                 </CardBody>
               </Card>
-              <Card className="col-span-6 sm:col-span-6">
+              <Card className="col-span-1">
                 <CardBody>
                   <div style={{ display: "block", height: "40vh" }}>
                     <Doughnut
@@ -303,7 +303,7 @@ export default withPageAuthRequired(function Summary() {
                   </div>
                 </CardBody>
               </Card>
-              <Card className="col-span-12 sm:col-span-12">
+              <Card className="col-span-1 lg:col-span-2">
                 <CardBody>
                   <div style={{ display: "block", height: "40vh" }}>
                     <Doughnut
@@ -330,7 +330,7 @@ export default withPageAuthRequired(function Summary() {
                   </div>
                 </CardBody>
               </Card>
-              <Card className="col-span-12 sm:col-span-12">
+              <Card className="col-span-1 lg:col-span-2">
                 <CardBody>
                   <div style={{ display: "block", height: "40vh" }}>
                     <Bar
@@ -350,7 +350,7 @@ export default withPageAuthRequired(function Summary() {
                 </CardBody>
               </Card>
             </div>
-            <div className="max-w-[900px] gap-2 grid grid-cols-12 grid-rows-1">
+            <div className="w-full gap-4 grid grid-cols-1">
               <Table
                 className="col-span-12 sm:col-span-12"
                 aria-label="expenses-table"

@@ -15,18 +15,20 @@ export default function Custom404() {
   const t = useTranslations("Error");
   return (
     <DefaultLayout>
-      <div className="inline-block max-w-lg text-center justify-center">
-        <h1
-          className={title({
-            size: "sm",
-          })}
-        >
-          ¯\_(ツ)_/¯
-        </h1>
-        <br />
-        <p>
-          <i>{t("poem")}</i>
-        </p>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="inline-block max-w-lg text-center">
+          <h1
+            className={title({
+              size: "sm",
+            })}
+          >
+            ¯\_(ツ)_/¯
+          </h1>
+          <br />
+          <p>
+            <i>{t("poem")}</i>
+          </p>
+        </div>
       </div>
     </DefaultLayout>
   );

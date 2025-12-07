@@ -11,9 +11,7 @@ export default function DefaultLayout({
     <div className="relative flex flex-col h-screen">
       <Head />
       <Navigation />
-      <main className="container mx-auto max-w-7xl px-6 flex-grow">
-        {children}
-      </main>
+      <main className="w-full px-4 flex-grow">{children}</main>
       <Footer />
     </div>
   );

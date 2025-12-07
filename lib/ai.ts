@@ -1,5 +1,11 @@
-import { completeChat as openaiCompleteChat, analyzeReceipt as openaiAnalyzeReceipt } from "./openai";
-import { completeChat as geminiCompleteChat, analyzeReceipt as geminiAnalyzeReceipt } from "./gemini";
+import {
+  completeChat as openaiCompleteChat,
+  analyzeReceipt as openaiAnalyzeReceipt,
+} from "./openai";
+import {
+  completeChat as geminiCompleteChat,
+  analyzeReceipt as geminiAnalyzeReceipt,
+} from "./gemini";
 
 type CompletionMessage = {
   role: "system" | "user" | "assistant";

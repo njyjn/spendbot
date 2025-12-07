@@ -362,9 +362,9 @@ bot.on(callbackQuery("data"), async (ctx) => {
                 { text: prefix + card },
               ]);
             } else {
-              methodsKeyboard = definitions.categories.map((category: string) => [
-                { text: prefix + category },
-              ]);
+              methodsKeyboard = definitions.categories.map(
+                (category: string) => [{ text: prefix + category }],
+              );
             }
             console.debug(methodsKeyboard);
             if (methodsKeyboard.length > 0) {
@@ -421,7 +421,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
       case "edit":
         if (session.metadata) {
           const editPromptMsg = await ctx.reply(
-            "Reply to this message with your corrections. For example:\n- \"change category to Dining\"\n- \"payee should be KFC\"\n- \"paid with OCBC365\"",
+            'Reply to this message with your corrections. For example:\n- "change category to Dining"\n- "payee should be KFC"\n- "paid with OCBC365"',
             {
               reply_parameters: {
                 message_id: messageId || 0,
@@ -528,7 +528,6 @@ export async function handleOnMessage(
 ) {
   const { message, session } = ctx;
 
-
   await ctx.sendChatAction("typing");
 
   // Scrub @username from message text if included
@@ -574,7 +573,9 @@ Only include fields the user wants to change. Return null for fields they didn't
       if (correctionResponse) {
         let jsonString = correctionResponse.trim();
         if (jsonString.startsWith("```json")) {
-          jsonString = jsonString.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+          jsonString = jsonString
+            .replace(/^```json\s*/, "")
+            .replace(/\s*```$/, "");
         } else if (jsonString.startsWith("```")) {
           jsonString = jsonString.replace(/^```\s*/, "").replace(/\s*```$/, "");
         }
@@ -583,12 +584,15 @@ Only include fields the user wants to change. Return null for fields they didn't
 
         // Apply corrections to session.metadata
         if (corrections.payee) session.metadata.payee = corrections.payee;
-        if (corrections.category) session.metadata.category = corrections.category;
+        if (corrections.category)
+          session.metadata.category = corrections.category;
         if (corrections.payment_method)
           session.metadata.payment_method = corrections.payment_method;
         if (corrections.total) session.metadata.total = corrections.total;
-        if (corrections.currency) session.metadata.currency = corrections.currency;
-        if (corrections.date) session.metadata.date = moment(corrections.date).toISOString();
+        if (corrections.currency)
+          session.metadata.currency = corrections.currency;
+        if (corrections.date)
+          session.metadata.date = moment(corrections.date).toISOString();
 
         // Delete original messages
         const editPromptId = session.metadata.editPromptId;
@@ -616,14 +620,18 @@ Only include fields the user wants to change. Return null for fields they didn't
           },
         );
       } else {
-        await ctx.reply("Failed to parse correction. Please try again or use the field buttons.");
+        await ctx.reply(
+          "Failed to parse correction. Please try again or use the field buttons.",
+        );
         try {
           await ctx.deleteMessage(loadingMsg.message_id);
         } catch {}
       }
     } catch (e) {
       console.error("Error parsing correction:", e);
-      await ctx.reply("Failed to parse correction. Please try again or use the field buttons.");
+      await ctx.reply(
+        "Failed to parse correction. Please try again or use the field buttons.",
+      );
       try {
         await ctx.deleteMessage(loadingMsg.message_id);
       } catch {}
@@ -739,7 +747,7 @@ export async function handleOnPhoto(
   console.info(`Photo received with ID ${photo!.file_id}`);
   const fileLink = await ctx.telegram.getFileLink(photo!.file_id);
   console.debug(`Original file link: ${fileLink.toString()}`);
-  
+
   // In test envs, try both with and without /test in path
   let fetchUrl = fileLink.toString();
   if (IS_TEST_ENV && !fetchUrl.includes("/test/test/")) {
@@ -747,19 +755,23 @@ export async function handleOnPhoto(
     fetchUrl = fetchUrl.replace("/file/bot", "/file/bot/test/");
     console.debug(`[TESTENV] Adjusted file link: ${fetchUrl}`);
   }
-  
+
   // Download photo as base64 file
   let file = await fetch(fetchUrl);
-  
+
   // If 404 in test env, try without the /test prefix
   if (!file.ok && IS_TEST_ENV && fetchUrl.includes("/file/bot/test/")) {
-    console.debug("[TESTENV] First attempt failed, trying without /test prefix");
+    console.debug(
+      "[TESTENV] First attempt failed, trying without /test prefix",
+    );
     fetchUrl = fileLink.toString();
     file = await fetch(fetchUrl);
   }
-  
+
   if (!file.ok) {
-    console.error(`Failed to fetch image: ${file.status} ${file.statusText} from ${fetchUrl}`);
+    console.error(
+      `Failed to fetch image: ${file.status} ${file.statusText} from ${fetchUrl}`,
+    );
     await ctx.reply("Failed to download image from Telegram");
     return;
   }
@@ -769,7 +781,7 @@ export async function handleOnPhoto(
   console.debug(`Base64 length: ${base64file.length} characters`);
   console.debug(`Final successful URL: ${fetchUrl}`);
   await ctx.sendChatAction("typing");
-  
+
   // Fetch definitions for receipt analysis
   let definitions = null;
   try {
@@ -777,7 +789,7 @@ export async function handleOnPhoto(
   } catch (e) {
     console.warn("Failed to fetch definitions for receipt analysis:", e);
   }
-  
+
   // Pass file to GPT for analysis
   const {
     ok,
@@ -788,7 +800,10 @@ export async function handleOnPhoto(
   } = await analyzeReceipt(
     base64file,
     definitions
-      ? { categories: definitions.categories || [], cards: definitions.cards || [] }
+      ? {
+          categories: definitions.categories || [],
+          cards: definitions.cards || [],
+        }
       : undefined,
   );
 
@@ -797,7 +812,8 @@ export async function handleOnPhoto(
   let parseMode: "Markdown" | undefined = "Markdown";
 
   if (ok) {
-    const totalTokens = (usage as any)?.total_tokens ?? (usage as any)?.totalTokenCount;
+    const totalTokens =
+      (usage as any)?.total_tokens ?? (usage as any)?.totalTokenCount;
     if (totalTokens) {
       console.info(`[${id}] used ${totalTokens}`);
     }
@@ -808,11 +824,13 @@ export async function handleOnPhoto(
         // Strip markdown code blocks if present
         let jsonString = response.trim();
         if (jsonString.startsWith("```json")) {
-          jsonString = jsonString.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+          jsonString = jsonString
+            .replace(/^```json\s*/, "")
+            .replace(/\s*```$/, "");
         } else if (jsonString.startsWith("```")) {
           jsonString = jsonString.replace(/^```\s*/, "").replace(/\s*```$/, "");
         }
-        
+
         const {
           date,
           payee,
@@ -842,7 +860,7 @@ export async function handleOnPhoto(
           error = response;
         }
         reply = `Something went wrong: \`\`\`\n${error || e}\n\`\`\``;
-          parseMode = undefined;
+        parseMode = undefined;
       }
     }
   } else if (error) {

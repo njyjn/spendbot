@@ -232,7 +232,9 @@ export default withPageAuthRequired(function God() {
               className="mt-2"
               onPress={async () => {
                 setIsLoading(true);
-                const response = await fetch(`/spend/api/telegram?setWebhook=true`);
+                const response = await fetch(
+                  `/spend/api/telegram?setWebhook=true`,
+                );
                 if ((await response.json()).ok) {
                   setIsSuccess(true);
                 }

@@ -97,36 +97,44 @@ npm run test:coverage
 ### Recording Expenses
 
 #### Via Telegram Photo
+
 Send a photo of a receipt to the bot. The AI will extract details (date, payee, amount, category, payment method).
 
 #### Via Telegram Text
+
 Send natural language messages like:
+
 - "Spent $10.50 at NTUC with OCBC365"
 - "Bought coffee for $5 at Starbucks"
 - "Paid $30 for groceries, cash"
 
 #### Web Dashboard
+
 Use the web interface to manually record or review expenses.
 
 ## Architecture
 
 ### AI Provider Routing (`lib/ai.ts`)
+
 - Routes to Gemini if `GEMINI_API_KEY` is set
 - Falls back to OpenAI if Gemini unavailable
 - Provides unified interface for `completeChat()` and `analyzeReceipt()`
 
 ### Receipt Analysis
+
 - Vision model extracts details from receipt images
 - Uses defined categories and payment methods from Google Sheets
 - Special handling: PayNow → Cash, Shopback → UNKNOWN (unless card inferred)
 
 ### NLP Parsing (`lib/nlp.ts`)
+
 - Converts natural language to structured expense data
 - Validates against sheet definitions
 - Caches definitions for 5 minutes to reduce API calls
 - Includes markdown response handling for AI variations
 
 ### Definitions Caching (`pages/api/definitions.ts`)
+
 - Fetches categories and payment methods from Google Sheets
 - 5-minute cache TTL to minimize sheet API calls
 - Used by both receipt recognition and NLP features
@@ -154,6 +162,7 @@ npm test
 ```
 
 Tests cover:
+
 - Successful expense parsing with all fields
 - Missing field handling (UNKNOWN defaults)
 - Date inference and null handling
@@ -164,16 +173,19 @@ Tests cover:
 ## Troubleshooting
 
 ### Receipt Recognition Failing
+
 - Verify `GEMINI_API_KEY` is set and valid
 - Check image quality (clear, well-lit receipts work best)
 - Ensure definitions are loaded from Google Sheets
 
 ### NLP Not Working
+
 - Verify expense keywords are detected (spent, expense, cost, paid, buy, purchase, $, sgd)
 - Check definitions are loaded from sheet
 - Ensure user has matching Telegram ID in database
 
 ### Telegram Webhook Issues
+
 - Update webhook URL: Use the "Set Telegram Webhook" button in `/spend/god` page
 - Verify `BASE_PATH` matches your actual domain
 - Check Telegram bot token is correct
@@ -181,4 +193,3 @@ Tests cover:
 ## License
 
 MIT
-

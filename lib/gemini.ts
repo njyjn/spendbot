@@ -13,14 +13,18 @@ const TEMPERATURE = parseInt(
 );
 const GEMINI_TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || "gemini-2.0-flash";
 const GEMINI_VISION_MODEL =
-  process.env.GEMINI_VISION_MODEL || process.env.GEMINI_TEXT_MODEL || "gemini-2.0-flash";
+  process.env.GEMINI_VISION_MODEL ||
+  process.env.GEMINI_TEXT_MODEL ||
+  "gemini-2.0-flash";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant.";
 
 const ai = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 function normalizeMessages(history?: CompletionMessage[]) {
-  const messages = history ?? [{ role: "system", content: DEFAULT_SYSTEM_PROMPT }];
+  const messages = history ?? [
+    { role: "system", content: DEFAULT_SYSTEM_PROMPT },
+  ];
   if (!messages.find((msg) => msg.role === "system")) {
     messages.unshift({ role: "system", content: DEFAULT_SYSTEM_PROMPT });
   }
@@ -36,14 +40,18 @@ function toGeminiHistory(history: CompletionMessage[]) {
     }));
 }
 
-export async function completeChat(prompt: string, history?: CompletionMessage[]) {
+export async function completeChat(
+  prompt: string,
+  history?: CompletionMessage[],
+) {
   const messages = normalizeMessages(history);
 
   const geminiHistory = toGeminiHistory(messages);
   messages.push({ role: "user", content: prompt });
 
   const systemInstruction =
-    messages.find((message) => message.role === "system")?.content || DEFAULT_SYSTEM_PROMPT;
+    messages.find((message) => message.role === "system")?.content ||
+    DEFAULT_SYSTEM_PROMPT;
   const model = ai.getGenerativeModel({
     model: GEMINI_TEXT_MODEL,
     systemInstruction,
@@ -62,7 +70,10 @@ export async function completeChat(prompt: string, history?: CompletionMessage[]
   return response.response.text();
 }
 
-export async function analyzeReceipt(base64file: string, definitions?: { categories: string[]; cards: string[] }) {
+export async function analyzeReceipt(
+  base64file: string,
+  definitions?: { categories: string[]; cards: string[] },
+) {
   try {
     // Validate base64 string
     if (!base64file || base64file.length === 0) {
@@ -72,12 +83,13 @@ export async function analyzeReceipt(base64file: string, definitions?: { categor
 
     // Remove any data URL prefix if present
     const base64Data = base64file.replace(/^data:image\/\w+;base64,/, "");
-    
+
     console.debug(`Processing image: ${base64Data.length} base64 characters`);
 
     const model = ai.getGenerativeModel({
       model: GEMINI_VISION_MODEL,
-      systemInstruction: "Your task is to assist with the recording of expenses.",
+      systemInstruction:
+        "Your task is to assist with the recording of expenses.",
       generationConfig: {
         temperature: TEMPERATURE,
         maxOutputTokens: MAX_TOKENS,
@@ -88,7 +100,7 @@ export async function analyzeReceipt(base64file: string, definitions?: { categor
     const categoryList = definitions?.categories?.length
       ? definitions.categories.join(", ")
       : "Auto, Beauty, Clothes, Dining, Drinks, Experiences, Gifts, Groceries, Home, Misc, Pets, Subscriptions, Taxi, Technology, Travel, Wellness";
-    
+
     const paymentList = definitions?.cards?.length
       ? definitions.cards.join(", ")
       : "Cash, Card";

@@ -1,4 +1,4 @@
-import { parseAndAddExpense } from "../nlp";
+import { parseExpense } from "../nlp";
 import { completeChat } from "../ai";
 import { addExpense } from "../../pages/api/expense";
 import { getDefintions } from "../../pages/api/definitions";
@@ -10,9 +10,13 @@ jest.mock("../../pages/api/expense");
 jest.mock("../../pages/api/definitions");
 jest.mock("../kysely");
 
-const mockCompleteChat = completeChat as jest.MockedFunction<typeof completeChat>;
+const mockCompleteChat = completeChat as jest.MockedFunction<
+  typeof completeChat
+>;
 const mockAddExpense = addExpense as jest.MockedFunction<typeof addExpense>;
-const mockGetDefinitions = getDefintions as jest.MockedFunction<typeof getDefintions>;
+const mockGetDefinitions = getDefintions as jest.MockedFunction<
+  typeof getDefintions
+>;
 const mockGetDb = getDb as jest.MockedFunction<typeof getDb>;
 
 describe("parseAndAddExpense", () => {
@@ -39,12 +43,12 @@ describe("parseAndAddExpense", () => {
           currency: "SGD",
           date: "2024-12-06",
           error: null,
-        })
+        }),
       );
 
       mockAddExpense.mockResolvedValue({ ok: true });
 
-      const result = await parseAndAddExpense("Spent $10.50 at NTUC with OCBC365");
+      const result = await parseExpense("Spent $10.50 at NTUC with OCBC365");
 
       expect(result.ok).toBe(true);
       expect(result.expense).toMatchObject({
@@ -61,7 +65,7 @@ describe("parseAndAddExpense", () => {
         "Groceries",
         10.5,
         "OCBC365",
-        "bot"
+        "bot",
       );
     });
 
@@ -75,12 +79,12 @@ describe("parseAndAddExpense", () => {
           currency: "SGD",
           date: "2024-12-06",
           error: null,
-        })
+        }),
       );
 
       mockAddExpense.mockResolvedValue({ ok: true });
 
-      const result = await parseAndAddExpense("Paid $5 at Unknown Store");
+      const result = await parseExpense("Paid $5 at Unknown Store");
 
       expect(result.ok).toBe(true);
       expect(result.expense?.category).toBe("UNKNOWN");
@@ -96,12 +100,12 @@ describe("parseAndAddExpense", () => {
           currency: "SGD",
           date: "2024-12-06",
           error: null,
-        })
+        }),
       );
 
       mockAddExpense.mockResolvedValue({ ok: true });
 
-      const result = await parseAndAddExpense("Bought coffee at Starbucks for $15");
+      const result = await parseExpense("Bought coffee at Starbucks for $15");
 
       expect(result.ok).toBe(true);
       expect(result.expense?.payment_method).toBe("UNKNOWN");
@@ -117,12 +121,12 @@ describe("parseAndAddExpense", () => {
           currency: "SGD",
           date: null,
           error: null,
-        })
+        }),
       );
 
       mockAddExpense.mockResolvedValue({ ok: true });
 
-      const result = await parseAndAddExpense("Took grab for $20");
+      const result = await parseExpense("Took grab for $20");
 
       expect(result.ok).toBe(true);
       expect(result.expense?.date).toBeDefined();
@@ -135,21 +139,21 @@ describe("parseAndAddExpense", () => {
     it("should strip markdown code blocks from AI response", async () => {
       mockCompleteChat.mockResolvedValue(
         "```json\n" +
-        JSON.stringify({
-          amount: 8,
-          payee: "Gong Cha",
-          category: "Drinks",
-          payment_method: "Cash",
-          currency: "SGD",
-          date: "2024-12-06",
-          error: null,
-        }) +
-        "\n```"
+          JSON.stringify({
+            amount: 8,
+            payee: "Gong Cha",
+            category: "Drinks",
+            payment_method: "Cash",
+            currency: "SGD",
+            date: "2024-12-06",
+            error: null,
+          }) +
+          "\n```",
       );
 
       mockAddExpense.mockResolvedValue({ ok: true });
 
-      const result = await parseAndAddExpense("Got bubble tea for $8");
+      const result = await parseExpense("Got bubble tea for $8");
 
       expect(result.ok).toBe(true);
       expect(result.expense?.payee).toBe("Gong Cha");
@@ -176,12 +180,12 @@ describe("parseAndAddExpense", () => {
           currency: "SGD",
           date: "2024-12-06",
           error: null,
-        })
+        }),
       );
 
       mockAddExpense.mockResolvedValue({ ok: true });
 
-      const result = await parseAndAddExpense("Spent $30 at FairPrice", "5000147974");
+      const result = await parseExpense("Spent $30 at FairPrice", "5000147974");
 
       expect(result.ok).toBe(true);
       expect(mockAddExpense).toHaveBeenCalledWith(
@@ -191,7 +195,7 @@ describe("parseAndAddExpense", () => {
         "Groceries",
         30,
         "DBS",
-        "Justin" // Should use actual user name
+        "Justin", // Should use actual user name
       );
     });
   });
@@ -207,10 +211,10 @@ describe("parseAndAddExpense", () => {
           payment_method: null,
           currency: null,
           date: null,
-        })
+        }),
       );
 
-      const result = await parseAndAddExpense("some random text");
+      const result = await parseExpense("some random text");
 
       expect(result.ok).toBe(false);
       expect(result.error).toBe("Could not extract amount");
@@ -226,10 +230,10 @@ describe("parseAndAddExpense", () => {
           currency: "SGD",
           date: "2024-12-06",
           error: null,
-        })
+        }),
       );
 
-      const result = await parseAndAddExpense("Bought something at Store");
+      const result = await parseExpense("Bought something at Store");
 
       expect(result.ok).toBe(false);
       expect(result.error).toContain("amount");
@@ -238,16 +242,18 @@ describe("parseAndAddExpense", () => {
     it("should return error when AI response is invalid JSON", async () => {
       mockCompleteChat.mockResolvedValue("This is not JSON");
 
-      const result = await parseAndAddExpense("test");
+      const result = await parseExpense("test");
 
       expect(result.ok).toBe(false);
       expect(result.error).toBe("Invalid AI response format");
     });
 
     it("should return error when definitions cannot be loaded", async () => {
-      mockGetDefinitions.mockRejectedValue(new Error("Failed to load definitions"));
+      mockGetDefinitions.mockRejectedValue(
+        new Error("Failed to load definitions"),
+      );
 
-      const result = await parseAndAddExpense("Spent $10");
+      const result = await parseExpense("Spent $10");
 
       expect(result.ok).toBe(false);
       expect(result.error).toContain("Failed to load definitions");
@@ -263,15 +269,15 @@ describe("parseAndAddExpense", () => {
           currency: "SGD",
           date: "2024-12-06",
           error: null,
-        })
+        }),
       );
 
-      mockAddExpense.mockResolvedValue({ 
-        ok: false, 
-        error: { message: "Sheet API error" } 
+      mockAddExpense.mockResolvedValue({
+        ok: false,
+        error: { message: "Sheet API error" },
       });
 
-      const result = await parseAndAddExpense("Spent $10");
+      const result = await parseExpense("Spent $10");
 
       expect(result.ok).toBe(false);
       expect(result.error).toBeDefined();
@@ -280,7 +286,7 @@ describe("parseAndAddExpense", () => {
     it("should handle exceptions gracefully", async () => {
       mockCompleteChat.mockRejectedValue(new Error("Network error"));
 
-      const result = await parseAndAddExpense("test");
+      const result = await parseExpense("test");
 
       expect(result.ok).toBe(false);
       expect(result.error).toBe("Network error");
@@ -298,19 +304,19 @@ describe("parseAndAddExpense", () => {
           currency: "SGD",
           date: "2024-12-06",
           error: null,
-        })
+        }),
       );
 
       mockAddExpense.mockResolvedValue({ ok: true });
 
       // First call
-      await parseAndAddExpense("Spent $5");
+      await parseExpense("Spent $5");
       expect(mockGetDefinitions).toHaveBeenCalledTimes(1);
 
-      // Second call - caching is handled by the definitions API, 
+      // Second call - caching is handled by the definitions API,
       // so this will still call the mock (mocks don't have caching)
       // In production, the caching at pages/api/definitions.ts will prevent repeated sheet calls
-      await parseAndAddExpense("Spent $10");
+      await parseExpense("Spent $10");
       expect(mockGetDefinitions).toHaveBeenCalledTimes(2);
     });
   });

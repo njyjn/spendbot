@@ -8,7 +8,10 @@ const DEFAULT_PAYMENT_METHOD = "UNKNOWN";
 const DEFAULT_CATEGORY = "UNKNOWN";
 const DEFAULT_CURRENCY = "SGD";
 
-const NLP_SYSTEM_PROMPT = (categories: string[], methods: string[]) => `You are an expense parsing assistant. Your job is to extract expense information from natural language input.
+const NLP_SYSTEM_PROMPT = (
+  categories: string[],
+  methods: string[],
+) => `You are an expense parsing assistant. Your job is to extract expense information from natural language input.
 
 Available Categories: ${categories.join(", ")}
 Available Payment Methods: ${methods.join(", ")}
@@ -74,7 +77,10 @@ export async function parseExpense(
     const VALID_PAYMENT_METHODS = definitions.cards || [];
 
     // Use AI to parse the natural language input
-    const systemPrompt = NLP_SYSTEM_PROMPT(VALID_CATEGORIES, VALID_PAYMENT_METHODS);
+    const systemPrompt = NLP_SYSTEM_PROMPT(
+      VALID_CATEGORIES,
+      VALID_PAYMENT_METHODS,
+    );
     const response = await completeChat(text, [
       { role: "system", content: systemPrompt },
     ]);
@@ -121,7 +127,9 @@ export async function parseExpense(
       : DEFAULT_CATEGORY;
 
     // Validate and normalize payment method
-    const payment_method = VALID_PAYMENT_METHODS.includes(parsedData.payment_method)
+    const payment_method = VALID_PAYMENT_METHODS.includes(
+      parsedData.payment_method,
+    )
       ? parsedData.payment_method
       : DEFAULT_PAYMENT_METHOD;
 
@@ -147,12 +155,16 @@ export async function parseExpense(
         .select(["first_name"])
         .where("telegram_id", "=", telegramId)
         .executeTakeFirst();
-      
+
       if (user) {
         personName = user.first_name;
-        console.debug(`[NLP Expense] Found user: ${personName} (telegram_id: ${telegramId})`);
+        console.debug(
+          `[NLP Expense] Found user: ${personName} (telegram_id: ${telegramId})`,
+        );
       } else {
-        console.warn(`[NLP Expense] No user found for telegram_id: ${telegramId}, using 'bot'`);
+        console.warn(
+          `[NLP Expense] No user found for telegram_id: ${telegramId}, using 'bot'`,
+        );
       }
     }
 

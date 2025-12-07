@@ -159,7 +159,7 @@ export async function addExpense(
         ],
       },
     });
-    
+
     if (result.status === 200) {
       // Send Slack notification on success
       await notifySlackExpense({
@@ -172,7 +172,7 @@ export async function addExpense(
         person,
       });
     }
-    
+
     return {
       ok: result.status === 200,
     };
