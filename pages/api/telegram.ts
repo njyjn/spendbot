@@ -8,7 +8,7 @@ import {
 } from "telegraf/typings/core/types/typegram";
 import { message, callbackQuery } from "telegraf/filters";
 import { analyzeReceipt, completeChat } from "../../lib/ai";
-import { parseAndAddExpense } from "../../lib/nlp";
+import { parseExpense } from "../../lib/nlp";
 import moment from "moment";
 import { addExpense } from "./expense";
 import getDb from "@/lib/kysely";
@@ -32,6 +32,10 @@ const receiptInlineKeyboard: InlineKeyboardButton[][] = [
     {
       text: "Submit",
       callback_data: "submit",
+    },
+    {
+      text: "Edit",
+      callback_data: "edit",
     },
   ],
   [
@@ -339,15 +343,21 @@ bot.on(callbackQuery("data"), async (ctx) => {
           callbackQuery.data === "payment_method" ||
           callbackQuery.data === "category"
         ) {
-          const definitions = await getDefintions();
+          let definitions;
+          try {
+            definitions = await getDefintions();
+          } catch (e) {
+            console.error("Failed to fetch definitions for edit flow", e);
+          }
           let replyMarkup;
-          let methodsKeyboard: KeyboardButton[][];
+          let methodsKeyboard: KeyboardButton[][] = [];
+          const isPaymentMethod = callbackQuery.data === "payment_method";
           if (definitions) {
             let prefix = "";
             if (ctx.chat!.type !== "private") {
               prefix = "@" + ctx.botInfo.username + " ";
             }
-            if (callbackQuery.data === "payment_method") {
+            if (isPaymentMethod) {
               methodsKeyboard = definitions.cards.map((card: string) => [
                 { text: prefix + card },
               ]);
@@ -357,15 +367,28 @@ bot.on(callbackQuery("data"), async (ctx) => {
               ]);
             }
             console.debug(methodsKeyboard);
-            replyMarkup = {
-              reply_markup: {
-                keyboard: methodsKeyboard,
-                one_time_keyboard: true,
-              },
-            };
+            if (methodsKeyboard.length > 0) {
+              replyMarkup = {
+                reply_markup: {
+                  keyboard: methodsKeyboard,
+                  one_time_keyboard: true,
+                  resize_keyboard: true,
+                },
+              };
+            }
           }
+          const editLabel = isPaymentMethod ? "payment method" : "category";
           replyId = (
-            await ctx.reply(`Choose a payment method or enter one`, replyMarkup)
+            await ctx.reply(
+              replyMarkup
+                ? `Choose a ${editLabel} or enter one`
+                : `Editing ${editLabel}:`,
+              replyMarkup ?? {
+                reply_markup: {
+                  force_reply: true,
+                },
+              },
+            )
           ).message_id;
         } else {
           replyId = (
@@ -395,6 +418,27 @@ bot.on(callbackQuery("data"), async (ctx) => {
           );
         }
         break;
+      case "edit":
+        if (session.metadata) {
+          const editPromptMsg = await ctx.reply(
+            "Reply to this message with your corrections. For example:\n- \"change category to Dining\"\n- \"payee should be KFC\"\n- \"paid with OCBC365\"",
+            {
+              reply_parameters: {
+                message_id: messageId || 0,
+                allow_sending_without_reply: true,
+              },
+              reply_markup: {
+                force_reply: true,
+              },
+            },
+          );
+          session.metadata.editPromptId = editPromptMsg.message_id;
+          // Delete the original message with buttons to prevent re-clicking
+          try {
+            await ctx.deleteMessage(messageId);
+          } catch {}
+        }
+        break;
       case "submit":
         if (session.metadata) {
           const {
@@ -404,6 +448,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
             currency,
             category,
             payment_method: paymentMethod,
+            person,
           } = session.metadata;
           const { validDate, month } = getDateAndMonth(date);
           // TODO: Convert currencies accordingly
@@ -415,7 +460,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
             category,
             total,
             paymentMethod,
-            ctx.from?.first_name || "bot",
+            person || ctx.from?.first_name || "bot",
           );
           if (result.ok) {
             reply = `✅ Expense submitted! \`\`\`json\n${JSON.stringify(session.metadata)}\n\`\`\``;
@@ -457,10 +502,9 @@ export default async function handler(
 
   res.status(200).json({ ok: true });
 }
-
 export async function handleStartCommand(ctx: ContextWithSession) {
   const { message, from } = ctx;
-  let reply = `Hello, ${from!.first_name} (${from!.id})`;
+  const reply = `Hello, ${from!.first_name} (${from!.id})`;
 
   const didReply = await ctx.reply(reply, {
     reply_parameters: {
@@ -484,7 +528,6 @@ export async function handleOnMessage(
 ) {
   const { message, session } = ctx;
 
-  session.count++;
 
   await ctx.sendChatAction("typing");
 
@@ -497,6 +540,95 @@ export async function handleOnMessage(
   );
   if (mentionEntity) {
     text = text.slice(mentionEntity.offset + mentionEntity.length + 1);
+  }
+
+  // Check if this is a correction reply to an edit prompt
+  if (
+    session.metadata?.editPromptId &&
+    message.reply_to_message?.message_id === session.metadata.editPromptId
+  ) {
+    await ctx.sendChatAction("typing");
+    const loadingMsg = await ctx.reply("Updating expense...", {
+      reply_parameters: {
+        message_id: message.message_id,
+        allow_sending_without_reply: true,
+      },
+    });
+
+    try {
+      // Use AI to parse correction intent
+      const correctionPrompt = `The user wants to correct an expense. Current expense data:
+${JSON.stringify(session.metadata, null, 2)}
+
+User's correction: "${text}"
+
+Extract what fields the user wants to change. Respond ONLY with valid JSON (no markdown):
+{"payee": "new value or null", "category": "new value or null", "payment_method": "new value or null", "total": number or null, "currency": "new value or null", "date": "YYYY-MM-DD or null"}
+
+Only include fields the user wants to change. Return null for fields they didn't mention.`;
+
+      const correctionResponse = await completeChat(correctionPrompt, [
+        { role: "system", content: "You are an expense correction assistant." },
+      ]);
+
+      if (correctionResponse) {
+        let jsonString = correctionResponse.trim();
+        if (jsonString.startsWith("```json")) {
+          jsonString = jsonString.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+        } else if (jsonString.startsWith("```")) {
+          jsonString = jsonString.replace(/^```\s*/, "").replace(/\s*```$/, "");
+        }
+
+        const corrections = JSON.parse(jsonString);
+
+        // Apply corrections to session.metadata
+        if (corrections.payee) session.metadata.payee = corrections.payee;
+        if (corrections.category) session.metadata.category = corrections.category;
+        if (corrections.payment_method)
+          session.metadata.payment_method = corrections.payment_method;
+        if (corrections.total) session.metadata.total = corrections.total;
+        if (corrections.currency) session.metadata.currency = corrections.currency;
+        if (corrections.date) session.metadata.date = moment(corrections.date).toISOString();
+
+        // Delete original messages
+        const editPromptId = session.metadata.editPromptId;
+        try {
+          await ctx.deleteMessage(editPromptId);
+          await ctx.deleteMessage(message.message_id);
+          await ctx.deleteMessage(loadingMsg.message_id);
+        } catch {}
+
+        // Clear edit prompt tracking
+        delete session.metadata.editPromptId;
+
+        // Show updated expense
+        await ctx.reply(
+          `Updated expense:\n\`\`\`json\n${JSON.stringify(session.metadata, null, 2)}\n\`\`\``,
+          {
+            parse_mode: "Markdown",
+            reply_parameters: {
+              message_id: session?.root || 0,
+              allow_sending_without_reply: true,
+            },
+            reply_markup: {
+              inline_keyboard: receiptInlineKeyboard,
+            },
+          },
+        );
+      } else {
+        await ctx.reply("Failed to parse correction. Please try again or use the field buttons.");
+        try {
+          await ctx.deleteMessage(loadingMsg.message_id);
+        } catch {}
+      }
+    } catch (e) {
+      console.error("Error parsing correction:", e);
+      await ctx.reply("Failed to parse correction. Please try again or use the field buttons.");
+      try {
+        await ctx.deleteMessage(loadingMsg.message_id);
+      } catch {}
+    }
+    return;
   }
 
   if (session.metadata?.edit) {
@@ -524,104 +656,67 @@ export async function handleOnMessage(
     );
   } else {
     session.type = "message";
-    
-    // Check if this looks like an expense entry (contains amount, $ sign, or expense keywords)
-    const expenseKeywords = ["spent", "expense", "cost", "paid", "buy", "purchase", "$", "sgd"];
-    const looksLikeExpense = expenseKeywords.some((keyword) =>
-      text.toLowerCase().includes(keyword),
-    );
 
-    if (looksLikeExpense) {
-      // Try to parse as NLP expense
-      await ctx.sendChatAction("typing");
-      const loadingMsg = await ctx.reply("Working on your expense...", {
-        reply_parameters: {
-          message_id: message.message_id,
-          allow_sending_without_reply: true,
-        },
-      });
-      try {
-        const expenseData = await parseAndAddExpense(text, ctx.from?.id.toString());
+    // Always treat text as an expense attempt; no chat fallback
+    await ctx.sendChatAction("typing");
+    const loadingMsg = await ctx.reply("Working on your expense...", {
+      reply_parameters: {
+        message_id: message.message_id,
+        allow_sending_without_reply: true,
+      },
+    });
 
-        if (expenseData.ok) {
-          const { expense } = expenseData;
-          await ctx.reply(
-            `✅ Expense recorded!\n\`\`\`json\n${JSON.stringify(expense, null, 2)}\n\`\`\``,
-            {
-              parse_mode: "Markdown",
-              reply_parameters: {
-                message_id: message.message_id,
-              },
-            },
-          );
-          try {
-            await ctx.deleteMessage(loadingMsg.message_id);
-          } catch {}
-          return;
-        } else {
-          // Not a valid expense, notify and fall through to chat
-          console.debug(`NLP expense parsing failed: ${expenseData.error}, treating as chat`);
-          await ctx.reply(
-            `⚠️ Could not parse as expense (${expenseData.error}). Treating as a regular message...`,
-            {
-              reply_parameters: {
-                message_id: message.message_id,
-              },
-            },
-          );
-        }
-      } catch (e) {
-        console.error("Error parsing NLP expense:", e);
+    const fallbackMessage =
+      "I can only handle expenses right now. Please send something like 'spent 50 at KFC with OCBC365' or share a receipt photo.";
+
+    try {
+      const expenseData = await parseExpense(text, ctx.from?.id.toString());
+
+      if (expenseData.ok && expenseData.expense) {
+        const { expense } = expenseData;
+        // Store in session and show confirmation buttons
+        session.type = "receipt";
+        session.root = message.message_id;
+        session.metadata = {
+          date: expense.date,
+          payee: expense.payee,
+          currency: expense.currency,
+          total: expense.total,
+          category: expense.category,
+          payment_method: expense.payment_method,
+          person: expense.person,
+        };
         await ctx.reply(
-          `⚠️ Error processing expense. Treating as a regular message...`,
+          `Please verify the details of the expense:\n\`\`\`json\n${JSON.stringify(session.metadata, null, 2)}\n\`\`\``,
           {
+            parse_mode: "Markdown",
             reply_parameters: {
               message_id: message.message_id,
             },
+            reply_markup: {
+              inline_keyboard: receiptInlineKeyboard,
+            },
           },
         );
-      } finally {
-        try {
-          await ctx.deleteMessage(loadingMsg.message_id);
-        } catch {}
+      } else {
+        console.debug(`NLP expense parsing failed: ${expenseData.error}`);
+        await ctx.reply(fallbackMessage, {
+          reply_parameters: {
+            message_id: message.message_id,
+          },
+        });
       }
-    }
-
-    // Fall through to general chat
-    await ctx.sendChatAction("typing");
-    const response = await completeChat(text, session.metadata?.completions);
-    if (response) {
-      await ctx.reply(response, {
+    } catch (e) {
+      console.error("Error parsing NLP expense:", e);
+      await ctx.reply(fallbackMessage, {
         reply_parameters: {
           message_id: message.message_id,
         },
-        reply_markup: {
-          remove_keyboard: true,
-        },
       });
-      if (!session.metadata?.completions) {
-        const completions = [];
-        completions.push({
-          role: "system",
-          content: "You are a helpful assistant.",
-        });
-        if (session.metadata) {
-          session.metadata.completions = completions;
-        } else {
-          session.metadata = {
-            completions: completions,
-          };
-        }
-      } else {
-        if (session.metadata.completions.length > 9) {
-          session.metadata.completions.shift();
-          session.metadata.completions.shift();
-        }
-      }
-      session.metadata.completions.push({
-        role: "assistant",
-        content: response,
-      });
+    } finally {
+      try {
+        await ctx.deleteMessage(loadingMsg.message_id);
+      } catch {}
     }
   }
 }
@@ -690,9 +785,17 @@ export async function handleOnPhoto(
     usage,
     json: response,
     error,
-  } = await analyzeReceipt(base64file, definitions ? { categories: definitions.categories || [], cards: definitions.cards || [] } : undefined);
+  } = await analyzeReceipt(
+    base64file,
+    definitions
+      ? { categories: definitions.categories || [], cards: definitions.cards || [] }
+      : undefined,
+  );
+
   let reply = "Failed to parse image";
   let hideInlineKeyboardMarkup = true;
+  let parseMode: "Markdown" | undefined = "Markdown";
+
   if (ok) {
     const totalTokens = (usage as any)?.total_tokens ?? (usage as any)?.totalTokenCount;
     if (totalTokens) {
@@ -739,15 +842,27 @@ export async function handleOnPhoto(
           error = response;
         }
         reply = `Something went wrong: \`\`\`\n${error || e}\n\`\`\``;
+          parseMode = undefined;
       }
     }
   } else if (error) {
-    reply += `: ${error}`;
+    const isQuotaError =
+      (typeof error === "object" && (error as any)?.status === 429) ||
+      `${error}`.toLowerCase().includes("quota") ||
+      `${error}`.toLowerCase().includes("too many requests");
+
+    if (isQuotaError) {
+      reply =
+        "Gemini receipt parsing is temporarily unavailable due to quota limits. Please try again in a minute, or use NLP to tell the bot your expense details (e.g. 'spent 12.50 at cafe with Visa').";
+    } else {
+      reply += `: ${error}`;
+    }
+    parseMode = undefined;
   }
 
   await ctx.deleteMessage(loadingMessageId);
   await ctx.reply(reply, {
-    parse_mode: "Markdown",
+    parse_mode: parseMode,
     reply_markup: {
       inline_keyboard: hideInlineKeyboardMarkup ? [] : receiptInlineKeyboard,
     },

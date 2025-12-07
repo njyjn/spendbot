@@ -43,20 +43,21 @@ export interface ParsedExpense {
     date: string;
     payee: string;
     category: string;
-    amount: number;
+    total: number;
     currency: string;
     payment_method: string;
+    person?: string;
   };
   error?: string;
 }
 
 /**
- * Parse natural language text to extract and record an expense
+ * Parse natural language text to extract expense details (does NOT submit to sheet)
  * @param text - Natural language input (e.g., "I spent $10 on NTUC with my card")
  * @param telegramId - Telegram user ID to identify the person
  * @returns Parsed expense data or error
  */
-export async function parseAndAddExpense(
+export async function parseExpense(
   text: string,
   telegramId?: string,
 ): Promise<ParsedExpense> {
@@ -155,35 +156,19 @@ export async function parseAndAddExpense(
       }
     }
 
-    // Add the expense to the sheet
-    const addResult = await addExpense(
-      month,
-      expenseDate,
-      parsedData.payee,
-      category,
-      parsedData.amount,
-      payment_method,
-      personName,
-    );
-
-    if (addResult.ok) {
-      return {
-        ok: true,
-        expense: {
-          date: expenseDate,
-          payee: parsedData.payee,
-          category,
-          amount: parsedData.amount,
-          currency: parsedData.currency,
-          payment_method,
-        },
-      };
-    } else {
-      return {
-        ok: false,
-        error: (addResult.error as any)?.message || "Failed to add expense",
-      };
-    }
+    // Return parsed expense without submitting to sheet
+    return {
+      ok: true,
+      expense: {
+        date: expenseDate,
+        payee: parsedData.payee,
+        category,
+        total: parsedData.amount,
+        currency: parsedData.currency,
+        payment_method,
+        person: personName,
+      },
+    };
   } catch (e: any) {
     console.error("NLP expense parsing error:", e);
     return { ok: false, error: e.message || "Internal server error" };
