@@ -113,15 +113,15 @@ export default function Navigation() {
                   {t("hello")}, {user.name}
                 </p>
               </DropdownItem>
-              <DropdownItem
+                            <DropdownItem
                 key="logout"
                 color="danger"
                 as={Link}
                 href="/api/auth/logout"
-                locale={locale}
-              >
-                {t("logout")}
-              </DropdownItem>
+               >
+                 {t("logout")}
+               </DropdownItem>
+
             </DropdownMenu>
           </Dropdown>
         ) : (
