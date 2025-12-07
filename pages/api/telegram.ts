@@ -458,7 +458,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
             validDate.toISOString(),
             payee,
             category,
-            total,
+            total, // pass as cost
             paymentMethod,
             person || ctx.from?.first_name || "bot",
           );
