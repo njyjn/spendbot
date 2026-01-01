@@ -16,9 +16,10 @@ import {
   Switch,
   Input,
 } from "@nextui-org/react";
-import { useUser, withPageAuthRequired } from "@auth0/nextjs-auth0";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import moment from "moment";
-import { Expense } from "./api/expense";
+import type { Expense } from "./api/expense";
 
 const fetcher = async (uri: string) => {
   const response = await fetch(uri);
