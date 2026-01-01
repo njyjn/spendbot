@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
+import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import moment from "moment";
 import { useTranslations } from "next-intl";
-import { GetStaticPropsContext } from "next";
+import { GetServerSidePropsContext } from "next";
 import useSWR from "swr";
 import {
   Button,
@@ -36,15 +36,17 @@ async function fetcher(uri: string) {
   return response.json();
 }
 
-export async function getStaticProps({ locale }: GetStaticPropsContext) {
-  return {
-    props: {
-      messages: (await import(`../messages/${locale}.json`)).default,
-    },
-  };
-}
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(context: GetServerSidePropsContext) {
+    return {
+      props: {
+        messages: (await import(`../messages/${context.locale}.json`)).default,
+      },
+    };
+  },
+});
 
-export default withPageAuthRequired(function God() {
+export default function God() {
   const router = useRouter();
   const t = useTranslations("God");
 
@@ -368,4 +370,4 @@ export default withPageAuthRequired(function God() {
       </section>
     </DefaultLayout>
   );
-});
+}

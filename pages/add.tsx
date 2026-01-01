@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import DefaultLayout from "@/layouts/default";
 import { title } from "@/components/primitives";
-import { GetStaticPropsContext } from "next";
+import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import useSWR from "swr";
@@ -16,7 +16,7 @@ import {
   Switch,
   Input,
 } from "@nextui-org/react";
-import { useUser, withPageAuthRequired } from "@auth0/nextjs-auth0/client";
+import { useUser, withPageAuthRequired } from "@auth0/nextjs-auth0";
 import moment from "moment";
 import { Expense } from "./api/expense";
 
@@ -25,15 +25,17 @@ const fetcher = async (uri: string) => {
   return response.json();
 };
 
-export async function getStaticProps({ locale }: GetStaticPropsContext) {
-  return {
-    props: {
-      messages: (await import(`../messages/${locale}.json`)).default,
-    },
-  };
-}
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(context: GetServerSidePropsContext) {
+    return {
+      props: {
+        messages: (await import(`../messages/${context.locale}.json`)).default,
+      },
+    };
+  },
+});
 
-export default withPageAuthRequired(function Expense() {
+export default function Expense() {
   const router = useRouter();
   const user = useUser();
   const t = useTranslations("Add");
@@ -354,4 +356,4 @@ export default withPageAuthRequired(function Expense() {
       </section>
     </DefaultLayout>
   );
-});
+}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import DefaultLayout from "@/layouts/default";
 import { title, subtitle } from "@/components/primitives";
 
-import { GetStaticPropsContext } from "next";
+import { GetServerSidePropsContext } from "next";
 import { useTranslations } from "next-intl";
 import useSWR from "swr";
 import moment from "moment";
@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@nextui-org/react";
 
-import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
+import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import {
   Chart,
@@ -171,15 +171,17 @@ function getLastMonthTotalDelta(expenseData: any) {
   return "-";
 }
 
-export async function getStaticProps({ locale }: GetStaticPropsContext) {
-  return {
-    props: {
-      messages: (await import(`../messages/${locale}.json`)).default,
-    },
-  };
-}
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(context: GetServerSidePropsContext) {
+    return {
+      props: {
+        messages: (await import(`../messages/${context.locale}.json`)).default,
+      },
+    };
+  },
+});
 
-export default withPageAuthRequired(function Summary() {
+export default function Summary() {
   const t = useTranslations("Summary");
 
   const [month, setMonth] = useState(moment().format("MMM YY"));
@@ -390,4 +392,4 @@ export default withPageAuthRequired(function Summary() {
       </section>
     </DefaultLayout>
   );
-});
+}

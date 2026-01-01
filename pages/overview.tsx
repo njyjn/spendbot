@@ -1,8 +1,8 @@
 import { title } from "@/components/primitives";
 import DefaultLayout from "@/layouts/default";
-import { GetStaticPropsContext } from "next";
+import { GetServerSidePropsContext } from "next";
 import { useTranslations } from "next-intl";
-import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
+import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import useSWR from "swr";
 import { useState } from "react";
 import moment from "moment";
@@ -65,15 +65,17 @@ function random_rgba(transparency: number = 1) {
   );
 }
 
-export async function getStaticProps({ locale }: GetStaticPropsContext) {
-  return {
-    props: {
-      messages: (await import(`../messages/${locale}.json`)).default,
-    },
-  };
-}
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(context: GetServerSidePropsContext) {
+    return {
+      props: {
+        messages: (await import(`../messages/${context.locale}.json`)).default,
+      },
+    };
+  },
+});
 
-export default withPageAuthRequired(function Overview() {
+export default function Overview() {
   const month = moment().format("MMM YY");
   const { data, error, isLoading } = useSWR(`/spend/api/networth`, fetcher);
   const t = useTranslations("Networth");
@@ -473,4 +475,4 @@ export default withPageAuthRequired(function Overview() {
       </section>
     </DefaultLayout>
   );
-});
+}
