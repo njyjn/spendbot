@@ -23,48 +23,28 @@ import {
 } from "@nextui-org/react";
 
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
-import { Bar, Doughnut, Line } from "react-chartjs-2";
 import {
-  Chart,
-  CategoryScale,
-  ArcElement,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
   Legend,
-  LinearScale,
-  BarElement,
-  Title,
-  PointElement,
-  LineElement,
-} from "chart.js";
+  ResponsiveContainer,
+} from "recharts";
 import currency from "currency.js";
-import { Expense } from "./api/expense";
-
-Chart.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  PointElement,
-  LineElement,
-);
+import type { Expense } from "./api/expense";
 
 const fetcher = async (uri: string) => {
   const response = await fetch(uri);
   return response.json();
 };
-
-// Courtesy https://stackoverflow.com/a/23095818
-function random_rgba() {
-  var o = Math.round,
-    r = Math.random,
-    s = 255;
-  return (
-    "rgba(" + o(r() * s) + "," + o(r() * s) + "," + o(r() * s) + "," + 1 + ")"
-  );
-}
 
 function getExpenseChartData(data?: any) {
   if (!data || !data.expenses)
@@ -181,6 +161,17 @@ export const getServerSideProps = withPageAuthRequired({
   },
 });
 
+const chartColors = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+  "#6366f1",
+];
+
 export default function Summary() {
   const t = useTranslations("Summary");
 
@@ -259,96 +250,179 @@ export default function Summary() {
             <div className="w-full gap-4 grid grid-cols-1 lg:grid-cols-2">
               <Card className="col-span-1">
                 <CardBody>
-                  <div style={{ display: "block", height: "40vh" }}>
-                    <Line
-                      options={{ maintainAspectRatio: false }}
-                      data={{
-                        labels: expensesByMonth.map((e) => e.month),
-                        datasets: [
-                          {
-                            label: "Total",
-                            data: expensesByMonth.map((e) => e.sum),
-                            borderColor: random_rgba(),
-                            fill: false,
-                            tension: 0.1,
-                          },
-                        ],
-                      }}
-                    />
-                  </div>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={expensesByMonth}
+                      margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="month" stroke="#6b7280" />
+                      <YAxis
+                        stroke="#6b7280"
+                        tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
+                      />
+                      <Tooltip
+                        formatter={(value) =>
+                          `$${Number(value).toLocaleString("en-US", {
+                            maximumFractionDigits: 0,
+                          })}`
+                        }
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="sum"
+                        stroke="#2563eb"
+                        strokeWidth={2}
+                        dot={false}
+                        name="Total"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </CardBody>
               </Card>
               <Card className="col-span-1">
                 <CardBody>
-                  <div style={{ display: "block", height: "40vh" }}>
-                    <Doughnut
-                      options={{
-                        plugins: {
-                          legend: {
-                            position: "bottom",
-                          },
-                        },
-                        maintainAspectRatio: false,
-                      }}
-                      data={{
-                        labels: expensesByPerson.map((e) => e.person),
-                        datasets: [
-                          {
-                            data: expensesByPerson.map((e) => e.sum),
-                            backgroundColor: expensesByPerson.map((_e) => {
-                              return random_rgba();
-                            }),
-                          },
-                        ],
-                      }}
-                    />
-                  </div>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={expensesByPerson.map((e) => ({
+                          name: e.person,
+                          value: e.sum,
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => {
+                          const total = expensesByPerson.reduce(
+                            (sum: number, item: any) => sum + item.sum,
+                            0,
+                          );
+                          const percentage = ((value / total) * 100).toFixed(1);
+                          return `${name}: ${percentage}%`;
+                        }}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {expensesByPerson.map((_: any, index: number) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={chartColors[index % chartColors.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) =>
+                          `$${Number(value).toLocaleString("en-US", {
+                            maximumFractionDigits: 0,
+                          })}`
+                        }
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </CardBody>
               </Card>
               <Card className="col-span-1 lg:col-span-2">
                 <CardBody>
-                  <div style={{ display: "block", height: "40vh" }}>
-                    <Doughnut
-                      options={{
-                        plugins: {
-                          legend: {
-                            position: "bottom",
-                          },
-                        },
-                        maintainAspectRatio: false,
-                      }}
-                      data={{
-                        labels: expensesByCategory.map((e) => e.category),
-                        datasets: [
-                          {
-                            data: expensesByCategory.map((e) => e.sum),
-                            backgroundColor: expensesByCategory.map((_e) => {
-                              return random_rgba();
-                            }),
-                          },
-                        ],
-                      }}
-                    />
-                  </div>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={expensesByCategory.map((e) => ({
+                          name: e.category,
+                          value: e.sum,
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => {
+                          const total = expensesByCategory.reduce(
+                            (sum: number, item: any) => sum + item.sum,
+                            0,
+                          );
+                          const percentage = ((value / total) * 100).toFixed(1);
+                          return `${name}: ${percentage}%`;
+                        }}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {expensesByCategory.map((_: any, index: number) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={chartColors[index % chartColors.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) =>
+                          `$${Number(value).toLocaleString("en-US", {
+                            maximumFractionDigits: 0,
+                          })}`
+                        }
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </CardBody>
               </Card>
               <Card className="col-span-1 lg:col-span-2">
                 <CardBody>
-                  <div style={{ display: "block", height: "40vh" }}>
-                    <Bar
-                      options={{ maintainAspectRatio: false }}
-                      data={{
-                        labels: expensesByCard.map((e) => e.card),
-                        datasets: [
-                          {
-                            label: "Cards",
-                            data: expensesByCard.map((e) => e.sum),
-                            backgroundColor: random_rgba(),
-                          },
-                        ],
-                      }}
-                    />
-                  </div>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={expensesByCard.map((e) => ({
+                        name: e.card,
+                        sum: e.sum,
+                      }))}
+                      margin={{ top: 5, right: 30, left: 0, bottom: 40 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#6b7280"
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                      />
+                      <YAxis
+                        stroke="#6b7280"
+                        tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
+                      />
+                      <Tooltip
+                        formatter={(value) =>
+                          `$${Number(value).toLocaleString("en-US", {
+                            maximumFractionDigits: 0,
+                          })}`
+                        }
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="sum"
+                        fill="#10b981"
+                        name="Cards"
+                        radius={[8, 8, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </CardBody>
               </Card>
             </div>

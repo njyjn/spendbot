@@ -6,20 +6,22 @@ import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import useSWR from "swr";
 import { useState } from "react";
 import moment from "moment";
-import { Bar, Doughnut, Line } from "react-chartjs-2";
 import {
-  Chart,
-  CategoryScale,
-  ArcElement,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
   Legend,
-  LinearScale,
-  BarElement,
-  Title,
-  PointElement,
-  LineElement,
-} from "chart.js";
-import annotationPlugin from "chartjs-plugin-annotation";
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
 import {
   Card,
   CardBody,
@@ -29,41 +31,10 @@ import {
   Button,
 } from "@nextui-org/react";
 
-Chart.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  PointElement,
-  LineElement,
-  annotationPlugin,
-);
-
 const fetcher = async (uri: string) => {
   const response = await fetch(uri);
   return response.json();
 };
-
-// Courtesy https://stackoverflow.com/a/23095818
-function random_rgba(transparency: number = 1) {
-  var o = Math.round,
-    r = Math.random,
-    s = 255;
-  return (
-    "rgba(" +
-    o(r() * s) +
-    "," +
-    o(r() * s) +
-    "," +
-    o(r() * s) +
-    "," +
-    transparency +
-    ")"
-  );
-}
 
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(context: GetServerSidePropsContext) {
@@ -100,6 +71,45 @@ export default function Overview() {
       (Math.pow(1 + monthlyReturn, monthsToFire) - 1) / monthlyReturn;
     monthlyInvestment = (fireNumber - data.tia) / fvFactor;
   }
+
+  const projectionData = Array.from(
+    { length: Math.min(monthsToFire ? monthsToFire + 1 : 0, 120) },
+    (_, i) => {
+      let current = data?.tia || 0;
+      for (let j = 0; j < i; j++) {
+        current = current * (1 + monthlyReturn) + (monthlyInvestment || 0);
+      }
+      return {
+        month: i,
+        cumulative: (data?.tia || 0) + i * (monthlyInvestment || 0),
+        withReturns: current,
+      };
+    },
+  );
+
+  const pieData =
+    data?.allocations?.map((a: any) => ({
+      name: a.allocation,
+      value: a.value,
+    })) || [];
+
+  const barData =
+    data?.allocations?.map((a: any) => ({
+      name: a.allocation,
+      Current: parseFloat((a.absolute * 100).toFixed(1)),
+      Target: parseFloat((a.target * 100).toFixed(1)),
+    })) || [];
+
+  const chartColors = [
+    "#3b82f6",
+    "#10b981",
+    "#f59e0b",
+    "#ef4444",
+    "#8b5cf6",
+    "#ec4899",
+    "#06b6d4",
+    "#6366f1",
+  ];
 
   return (
     <DefaultLayout>
@@ -240,6 +250,7 @@ export default function Overview() {
               )}
             </CardBody>
           </Card>
+
           {/* FIRE Growth Graph */}
           <Card className="w-full">
             <CardHeader className="flex flex-col items-start px-4 py-2">
@@ -252,98 +263,72 @@ export default function Overview() {
             </CardHeader>
             <CardBody>
               {fireNumber && data?.tia && monthsToFire && monthsToFire > 0 && (
-                <div
-                  style={{
-                    display: "block",
-                    height: "40vh",
-                    minHeight: "300px",
-                  }}
-                >
-                  <Line
-                    key={`fire-line-${monthsToFire}-${fireNumber}-${data?.tia}`}
-                    options={{
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: { display: true },
-                        ...(fireNumber && monthsToFire
-                          ? {
-                              annotation: {
-                                annotations: {
-                                  fireGoal: {
-                                    type: "line",
-                                    yMin: fireNumber,
-                                    yMax: fireNumber,
-                                    borderColor: "#f59e42",
-                                    borderWidth: 2,
-                                    borderDash: [6, 6],
-                                    label: {
-                                      display: true,
-                                      content: "FIRE Goal",
-                                      position: "start",
-                                      color: "#f59e42",
-                                      backgroundColor: "rgba(0,0,0,0.7)",
-                                    },
-                                  },
-                                },
-                              },
-                            }
-                          : {}),
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          title: { display: true, text: "Portfolio Value ($)" },
-                        },
-                        x: {
-                          title: { display: true, text: "Month" },
-                        },
-                      },
-                    }}
-                    data={{
-                      labels: Array.from(
-                        { length: monthsToFire + 1 },
-                        (_, i) => `Month ${i}`,
-                      ),
-                      datasets: [
-                        {
-                          label: "Cumulative Savings",
-                          data: (() => {
-                            let values = [];
-                            let current = data.tia;
-                            for (let i = 0; i <= monthsToFire; i++) {
-                              values.push(
-                                current + i * (monthlyInvestment || 0),
-                              );
-                            }
-                            return values;
-                          })(),
-                          borderColor: "#22c55e",
-                          backgroundColor: "rgba(34,197,94,0.3)",
-                          fill: "origin",
-                          pointRadius: 0,
-                        },
-                        {
-                          label: "Cumulative Returns",
-                          data: (() => {
-                            let values = [];
-                            let current = data.tia;
-                            for (let i = 0; i <= monthsToFire; i++) {
-                              values.push(current);
-                              current =
-                                current * (1 + monthlyReturn) +
-                                (monthlyInvestment || 0);
-                            }
-                            return values;
-                          })(),
-                          borderColor: "#2563eb",
-                          backgroundColor: "rgba(37,99,235,0.3)",
-                          fill: "origin",
-                          pointRadius: 0,
-                        },
-                      ],
-                    }}
-                  />
-                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart
+                    data={projectionData}
+                    margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="month"
+                      stroke="#6b7280"
+                      label={{
+                        value: "Months",
+                        position: "insideBottomRight",
+                        offset: -5,
+                      }}
+                    />
+                    <YAxis
+                      stroke="#6b7280"
+                      label={{
+                        value: "Portfolio Value ($)",
+                        angle: -90,
+                        position: "insideLeft",
+                      }}
+                      tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      formatter={(value) =>
+                        `$${Number(value).toLocaleString("en-US", {
+                          maximumFractionDigits: 0,
+                        })}`
+                      }
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
+                    <ReferenceLine
+                      y={fireNumber}
+                      stroke="#f59e0b"
+                      strokeDasharray="5 5"
+                      label={{
+                        value: "FIRE Goal",
+                        position: "right",
+                        fill: "#f59e0b",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="cumulative"
+                      stroke="#22c55e"
+                      strokeWidth={2}
+                      dot={false}
+                      name="Without Returns"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="withReturns"
+                      stroke="#2563eb"
+                      strokeWidth={2}
+                      dot={false}
+                      name="With 7% Returns"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               )}
             </CardBody>
           </Card>
@@ -370,40 +355,48 @@ export default function Overview() {
                     <h3 className="text-lg font-semibold mb-4">
                       Portfolio Breakdown
                     </h3>
-                    <div
-                      style={{
-                        display: "block",
-                        height: "60vh",
-                        minHeight: "400px",
-                      }}
-                    >
-                      <Doughnut
-                        options={{
-                          plugins: {
-                            legend: {
-                              position: "right",
-                            },
-                          },
-                          maintainAspectRatio: false,
-                        }}
-                        data={{
-                          labels: data.allocations.map(
-                            (a: any) =>
-                              `${a.allocation} ($${a.value.toLocaleString("en-US", { maximumFractionDigits: 0 })})`,
-                          ),
-                          datasets: [
-                            {
-                              data: data.allocations.map((a: any) => a.value),
-                              backgroundColor: data.allocations.map(
-                                (_a: any) => {
-                                  return random_rgba();
-                                },
-                              ),
-                            },
-                          ],
-                        }}
-                      />
-                    </div>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value }) => {
+                            const total = pieData.reduce(
+                              (sum: number, item: any) => sum + item.value,
+                              0,
+                            );
+                            const percentage = ((value / total) * 100).toFixed(
+                              1,
+                            );
+                            return `${name}: ${percentage}%`;
+                          }}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {pieData.map((_: any, index: number) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={chartColors[index % chartColors.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value) =>
+                            `$${Number(value).toLocaleString("en-US", {
+                              maximumFractionDigits: 0,
+                            })}`
+                          }
+                          contentStyle={{
+                            backgroundColor: "#fff",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "8px",
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </CardBody>
                 </Card>
 
@@ -412,58 +405,41 @@ export default function Overview() {
                     <h3 className="text-lg font-semibold mb-4">
                       Allocation vs Target
                     </h3>
-                    <div
-                      style={{
-                        display: "block",
-                        height: "60vh",
-                        minHeight: "400px",
-                      }}
-                    >
-                      <Bar
-                        options={{
-                          maintainAspectRatio: false,
-                          indexAxis: "y",
-                          scales: {
-                            x: {
-                              stacked: false,
-                              max: 100,
-                            },
-                            y: {
-                              stacked: false,
-                              ticks: {
-                                mirror: true,
-                              },
-                            },
-                          },
-                          plugins: {
-                            legend: {
-                              display: true,
-                            },
-                          },
-                        }}
-                        data={{
-                          labels: data.allocations.map(
-                            (a: any) => a.allocation,
-                          ),
-                          datasets: [
-                            {
-                              label: "Current (%)",
-                              data: data.allocations.map((a: any) =>
-                                (a.absolute * 100).toFixed(1),
-                              ),
-                              backgroundColor: "rgba(75, 192, 192, 0.7)",
-                            },
-                            {
-                              label: "Target (%)",
-                              data: data.allocations.map((a: any) =>
-                                (a.target * 100).toFixed(1),
-                              ),
-                              backgroundColor: "rgba(255, 99, 132, 0.7)",
-                            },
-                          ],
-                        }}
-                      />
-                    </div>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart
+                        data={barData}
+                        margin={{ top: 5, right: 30, left: 0, bottom: 40 }}
+                        layout="vertical"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis type="number" stroke="#6b7280" />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          stroke="#6b7280"
+                          width={80}
+                        />
+                        <Tooltip
+                          formatter={(value) => `${value}%`}
+                          contentStyle={{
+                            backgroundColor: "#fff",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "8px",
+                          }}
+                        />
+                        <Legend />
+                        <Bar
+                          dataKey="Current"
+                          fill="#2563eb"
+                          radius={[0, 8, 8, 0]}
+                        />
+                        <Bar
+                          dataKey="Target"
+                          fill="#f59e0b"
+                          radius={[0, 8, 8, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </CardBody>
                 </Card>
               </div>
