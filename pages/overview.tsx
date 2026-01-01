@@ -48,7 +48,7 @@ export const getServerSideProps = withPageAuthRequired({
 
 export default function Overview() {
   const month = moment().format("MMM YY");
-  const { data, error, isLoading } = useSWR(`/spend/api/networth`, fetcher);
+  const { data, error, isLoading } = useSWR(`/api/networth`, fetcher);
   const t = useTranslations("Networth");
   const [annualSpending, setAnnualSpending] = useState<number | null>(120000);
 

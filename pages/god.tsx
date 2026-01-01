@@ -64,7 +64,7 @@ export default function God() {
   const [userTelegramId, setUserTelegramId] = useState("");
 
   const { data: users, isLoading: usersIsLoading } = useSWR(
-    "/spend/api/god/users",
+    "/api/god/users",
     fetcher,
   );
 
@@ -76,7 +76,7 @@ export default function God() {
 
   const patchUser = async (id: string | number) => {
     setIsLoading(true);
-    const response = await fetch(`/spend/api/god/users/${id}`, {
+    const response = await fetch(`/api/god/users/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -98,7 +98,7 @@ export default function God() {
 
   const deleteUser = async (id: string | number) => {
     setIsLoading(true);
-    const response = await fetch(`/spend/api/god/users/${id}`, {
+    const response = await fetch(`/api/god/users/${id}`, {
       method: "DELETE",
     });
     if ((await response.json()).ok) {
@@ -123,7 +123,7 @@ export default function God() {
                 onSubmit={async (event) => {
                   event.preventDefault();
                   setIsLoading(true);
-                  const response = await fetch("/spend/api/god/users", {
+                  const response = await fetch("/api/god/users", {
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
@@ -214,7 +214,7 @@ export default function God() {
               disabled={isLoading}
               onPress={async () => {
                 setIsLoading(true);
-                const response = await fetch(`/spend/api/clone?month=${month}`);
+                const response = await fetch(`/api/clone?month=${month}`);
                 if ((await response.json()).ok) {
                   setIsSuccess(true);
                 }
@@ -235,7 +235,7 @@ export default function God() {
               onPress={async () => {
                 setIsLoading(true);
                 const response = await fetch(
-                  `/spend/api/telegram?setWebhook=true`,
+                  `/api/telegram?setWebhook=true`,
                 );
                 if ((await response.json()).ok) {
                   setIsSuccess(true);

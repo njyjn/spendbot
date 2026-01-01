@@ -180,12 +180,12 @@ export default function Summary() {
     data: monthsData,
     error: monthsError,
     isLoading: monthsIsLoading,
-  } = useSWR("/spend/api/expense/months", fetcher);
+  } = useSWR("/api/expense/months", fetcher);
   const {
     data: expenseData,
     error: expenseError,
     isLoading: expenseIsLoading,
-  } = useSWR(`/spend/api/expense?month=${month}&lookback=5`, fetcher);
+  } = useSWR(`/api/expense?month=${month}&lookback=5`, fetcher);
   let {
     expensesByCategory,
     expensesByCard,

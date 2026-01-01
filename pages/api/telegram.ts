@@ -45,7 +45,7 @@ const receiptInlineKeyboard: InlineKeyboardButton[][] = [
     },
     {
       text: "Manual Entry",
-      url: "https://bot.ngsim.net/spend/add",
+      url: "https://spend.bot.ngsim.net/add",
     },
   ],
   [

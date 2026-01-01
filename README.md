@@ -40,7 +40,7 @@ See `.env.sample` for all required variables:
 ```bash
 # Core
 TELEGRAM_BOT_TOKEN=your_bot_token
-BASE_PATH=https://your-domain.com/spend
+BASE_PATH=https://your-domain.com
 
 # AI
 GEMINI_API_KEY=your_gemini_key
@@ -62,7 +62,7 @@ AUTH0_SECRET=your_secret
 AUTH0_ISSUER_BASE_URL=https://your-domain.auth0.com
 AUTH0_CLIENT_ID=your_client_id
 AUTH0_CLIENT_SECRET=your_client_secret
-AUTH0_BASE_URL=http://localhost:3000/spend
+AUTH0_BASE_URL=http://localhost:3000
 ```
 
 ### Installation
@@ -77,7 +77,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000/spend](http://localhost:3000/spend)
+Open [http://localhost:3000](http://localhost:3000)
 
 ### Testing
 
@@ -186,7 +186,7 @@ Tests cover:
 
 ### Telegram Webhook Issues
 
-- Update webhook URL: Use the "Set Telegram Webhook" button in `/spend/god` page
+- Update webhook URL: Use the "Set Telegram Webhook" button in `/god` page
 - Verify `BASE_PATH` matches your actual domain
 - Check Telegram bot token is correct
 

@@ -57,11 +57,11 @@ export default function Expense() {
   const month = moment(date).format("MMM YY");
 
   const { data: definitions, error: definitionsError } = useSWR(
-    "/spend/api/definitions",
+    "/api/definitions",
     fetcher,
   );
   const { data: expenses, error: expensesError } = useSWR(
-    `/spend/api/expense?month=${month}`,
+    `/api/expense?month=${month}`,
     fetcher,
   );
 
@@ -115,7 +115,7 @@ export default function Expense() {
                 }
               }
               const response = await fetch(
-                `/spend/api/expense?month=${month}`,
+                `/api/expense?month=${month}`,
                 {
                   method: "POST",
                   headers: {

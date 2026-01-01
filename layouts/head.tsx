@@ -13,22 +13,22 @@ export const Head = () => {
       />
       {/* <!-- Open Graph / Facebook --> */}
       <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://bot.ngsim.net/spend" />
+      <meta property="og:url" content="https://spend.bot.ngsim.net" />
       <meta property="og:title" content="SpendBot" />
       <meta
         property="og:description"
         content="Empower your finances easily with SpendBot"
       />
-      <meta property="og:image" content="/spend/images/meta.jpg" />
+      <meta property="og:image" content="/images/meta.jpg" />
       {/* <!-- Twitter --> */}
       <meta property="twitter:card" content="summary_large_image" />
-      <meta property="twitter:url" content="https://bot.ngsim.net/spend" />
+      <meta property="twitter:url" content="https://spend.bot.ngsim.net" />
       <meta property="twitter:title" content="SpendBot" />
       <meta
         property="twitter:description"
         content="Empower your finances easily with SpendBot"
       />
-      <meta property="twitter:image" content="/spend/images/meta.jpg" />
+      <meta property="twitter:image" content="/images/meta.jpg" />
       {/* <!-- Meta Tags Generated with https://metatags.io --> */}
 
       <meta
@@ -39,21 +39,21 @@ export const Head = () => {
       <link
         rel="apple-touch-icon"
         sizes="180x180"
-        href="/spend/apple-touch-icon.png"
+        href="/apple-touch-icon.png"
       />
       <link
         rel="icon"
         type="image/png"
         sizes="32x32"
-        href="/spend/favicon-32x32.png"
+        href="/favicon-32x32.png"
       />
       <link
         rel="icon"
         type="image/png"
         sizes="16x16"
-        href="/spend/favicon-16x16.png"
+        href="/favicon-16x16.png"
       />
-      <link rel="manifest" href="/spend/site.webmanifest" />
+      <link rel="manifest" href="/site.webmanifest" />
     </NextHead>
   );
 };
